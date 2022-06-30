@@ -1,0 +1,785 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="baidu-site-verification" content=""><meta name="google-site-verification" content="UKlpQSB6IlVlxjxgprQbTNRUiLE1BnpIV5zeQ_MYkks"><title> 构建NativeActivity没有dex没有java代码的apk也能在手机上跑起来 · 情迁博客</title><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="构建NativeActivity没有dex没有java代码的apk也能在手机上跑起来 - 情随事迁"><meta name="keywords"><meta name="author" content="情随事迁"><meta name="referrer" content="no-referrer"><link rel="short icon" href="/images/favicon.ico"><link rel="stylesheet" href="/css/bubuzou.css"><link rel="search" type="application/opensearchdescription+xml" href="https://lozn.top/atom.xml" title="情迁博客"><meta name="generator" content="Hexo 5.4.1"></head><body><header><div class="header row"> <a href="/" class="logo-link"><img src="/images/logo.png"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/archives/" target="_self" data-hover="归档" class="nav-list-link">归档</a></li><li class="nav-list-item"><a href="https://godhand.lozn.top" target="_blank" data-hover="神之手" class="nav-list-link">神之手</a></li><li class="nav-list-item"><a href="https://robot.lozn.top" target="_blank" data-hover="机器人" class="nav-list-link">机器人</a></li><li class="nav-list-item"><a href="/categories/情迁软件/" target="_self" data-hover="情迁" class="nav-list-link">情迁</a></li><li class="nav-list-item"><a href="https://www.jianshu.com/u/9b0768e66d01" target="_blank" data-hover="简书" class="nav-list-link">简书</a></li><li class="nav-list-item"><a href="/update/" target="_self" data-hover="下载" class="nav-list-link">下载</a></li><li class="nav-list-item"><a href="/about/" target="_self" data-hover="关于" class="nav-list-link">关于</a></li></ul><div class="search"><a id="search_btn" href="#search"></a></div></div></header><div class="row scroll-con"><section class="container"><!-- for archive page --><div id="postAr" class="post"><article class="post-block"><h1 class="post-title">构建NativeActivity没有dex没有java代码的apk也能在手机上跑起来</h1><div class="post-info">2018-10-21<p class="visit"><i data-hk-page="current">Loading</i><span>次访问</span></p></div><div class="post-content"><p>简书链接:<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/702d131121a8">构建NativeActivity没有dex没有java代码的apk也能在手机上跑起来</a><br>文章字数：3256,阅读全文大约需要13分钟<br>干了几年安卓开发 ，某次经历刷新了我的世界观了<br>清单文件application节点设置为</p>
+<figure class="highlight plaintext"><figcaption><span>android:label</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">定义application节点</span><br></pre></td></tr></table></figure>
+
+<pre><code>&lt;application android:label=&quot;@string/app_name&quot; android:hasCode=&quot;false&quot;&gt;
+
+    &lt;!-- Our activity is the built-in NativeActivity framework class.
+         This will take care of integrating with our NDK code. --&gt;
+    &lt;activity android:name=&quot;android.app.NativeActivity&quot; android:label=&quot;@string/app_name&quot; android:configChanges=&quot;orientation|keyboardHidden&quot;&gt;
+        &lt;!-- Tell NativeActivity the name of our .so --&gt;
+        &lt;meta-data android:name=&quot;android.app.lib_name&quot; android:value=&quot;$(AndroidAppLibName)&quot;/&gt;
+        &lt;intent-filter&gt;
+            &lt;action android:name=&quot;android.intent.action.MAIN&quot;/&gt;
+            &lt;category android:name=&quot;android.intent.category.LAUNCHER&quot;/&gt;
+        &lt;/intent-filter&gt;
+    &lt;/activity&gt;
+&lt;/application&gt;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">完整的</span><br></pre></td></tr></table></figure>
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="com.AndroidNativeActivity" platformBuildVersionCode="21" platformBuildVersionName="5.0.1-1624448">
+    <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="21" />
+    <application android:label="@string/app_name" android:hasCode="false" android:debuggable="true">
+        <activity android:label="@string/app_name" android:name="android.app.NativeActivity" android:configChanges="keyboardHidden|orientation">
+            <meta-data android:name="android.app.lib_name" android:value="AndroidNativeActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">其中```AndroidNativeActivity```就是```libAndroidNativeActivity.so```</span><br><span class="line"></span><br><span class="line">入口函数```void android_main(struct android_app* state) &#123;```</span><br><span class="line"></span><br><span class="line">完整c代码</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+/*
+ * 版权所有 (C) 2010 Android 开放源码代码项目
+ *
+ * 按照 Apache 许可 2.0 版本(称为“许可”)授予许可；
+ * 要使用此文件，必须遵循“许可”中的说明。
+ * 你可以从以下位置获取“许可”的副本
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * 除非适用法律要求或书面同意，根据
+ * “许可”分配的软件“按原样”分配，
+ * 不提供任何形式(无论是明示还是默示)的担保和条件。
+ * 参见“许可”了解“许可”中管理权限和
+ * 限制的指定语言。
+ *
+*/
+
+<p>#define LOGI(…) ((void)__android_log_print(ANDROID_LOG_INFO, “AndroidProject1.NativeActivity”, <strong>VA_ARGS</strong>))<br>#define LOGW(…) ((void)__android_log_print(ANDROID_LOG_WARN, “AndroidProject1.NativeActivity”, <strong>VA_ARGS</strong>))</p>
+<p>&#x2F;**</p>
+<ul>
+<li>我们的保存状态数据。</li>
+</ul>
+<p>*&#x2F;<br>struct saved_state {<br>    float angle;<br>    int32_t x;<br>    int32_t y;<br>};</p>
+<p>&#x2F;**</p>
+<ul>
+<li>我们应用程序的共享状态。</li>
+</ul>
+<p><em>&#x2F;<br>struct engine {<br>    struct android_app</em> app;</p>
+<pre><code>ASensorManager* sensorManager;
+const ASensor* accelerometerSensor;
+ASensorEventQueue* sensorEventQueue;
+
+int animating;
+EGLDisplay display;
+EGLSurface surface;
+EGLContext context;
+int32_t width;
+int32_t height;
+struct saved_state state;
+</code></pre>
+<p>};</p>
+<p>&#x2F;**</p>
+<ul>
+<li>初始化当前显示的 EGL 上下文。</li>
+</ul>
+<p><em>&#x2F;<br>static int engine_init_display(struct engine</em> engine) {<br>    &#x2F;&#x2F;初始化 OpenGL ES 和 EGL</p>
+<pre><code>/*
+* 此处指定了所需配置的属性。
+*下面，我们选择与屏上窗口
+* 兼容的至少每个颜色有 8 个位的 EGLConfig 
+*/
+const EGLint attribs[] = &#123;
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_BLUE_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_RED_SIZE, 8,
+    EGL_NONE
+&#125;;
+EGLint w, h, format;
+EGLint numConfigs;
+EGLConfig config;
+EGLSurface surface;
+EGLContext context;
+
+EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+
+eglInitialize(display, 0, 0);
+
+/*此处，应用程序选择了所需的配置。 在本
+*示例中，我们有非常简化的选择流程，
+*其中我们选取了与我们的标准匹配的第一个 EGLConfig */
+eglChooseConfig(display, attribs, &amp;config, 1, &amp;numConfigs);
+
+/* EGL_NATIVE_VISUAL_ID 是
+*保证会被 ANativeWindow_setBuffersGeometry() 接受的 EGLConfig 的属性。
+* 只要我们选取 EGLConfig，就可使用 EGL_NATIVE_VISUAL_ID 安全地重新配置
+* ANativeWindow 缓冲区以进行匹配。*/
+eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &amp;format);
+
+ANativeWindow_setBuffersGeometry(engine-&gt;app-&gt;window, 0, 0, format);
+
+surface = eglCreateWindowSurface(display, config, engine-&gt;app-&gt;window, NULL);
+context = eglCreateContext(display, config, NULL, NULL);
+
+if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) &#123;
+    LOGW(&quot;Unable to eglMakeCurrent&quot;);
+    return -1;
+&#125;
+
+eglQuerySurface(display, surface, EGL_WIDTH, &amp;w);
+eglQuerySurface(display, surface, EGL_HEIGHT, &amp;h);
+
+engine-&gt;display = display;
+engine-&gt;context = context;
+engine-&gt;surface = surface;
+engine-&gt;width = w;
+engine-&gt;height = h;
+engine-&gt;state.angle = 0;
+
+//初始化 GL 状态。
+glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+glEnable(GL_CULL_FACE);
+glShadeModel(GL_SMOOTH);
+glDisable(GL_DEPTH_TEST);
+
+return 0;
+</code></pre>
+<p>}</p>
+<p>&#x2F;**</p>
+<ul>
+<li>仅显示中的当前帧。</li>
+</ul>
+<p><em>&#x2F;<br>static void engine_draw_frame(struct engine</em> engine) {<br>    if (engine-&gt;display &#x3D;&#x3D; NULL) {<br>        &#x2F;&#x2F;无显示。<br>        return;<br>    }</p>
+<pre><code>//只使用一种颜色填充屏幕。
+glClearColor(((float)engine-&gt;state.x) / engine-&gt;width, engine-&gt;state.angle,
+    ((float)engine-&gt;state.y) / engine-&gt;height, 1);
+glClear(GL_COLOR_BUFFER_BIT);
+
+eglSwapBuffers(engine-&gt;display, engine-&gt;surface);
+</code></pre>
+<p>}</p>
+<p>&#x2F;**</p>
+<ul>
+<li>关闭当前与显示关联的 EGL 上下文。</li>
+</ul>
+<p><em>&#x2F;<br>static void engine_term_display(struct engine</em> engine) {<br>    if (engine-&gt;display !&#x3D; EGL_NO_DISPLAY) {<br>        eglMakeCurrent(engine-&gt;display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);<br>        if (engine-&gt;context !&#x3D; EGL_NO_CONTEXT) {<br>            eglDestroyContext(engine-&gt;display, engine-&gt;context);<br>        }<br>        if (engine-&gt;surface !&#x3D; EGL_NO_SURFACE) {<br>            eglDestroySurface(engine-&gt;display, engine-&gt;surface);<br>        }<br>        eglTerminate(engine-&gt;display);<br>    }<br>    engine-&gt;animating &#x3D; 0;<br>    engine-&gt;display &#x3D; EGL_NO_DISPLAY;<br>    engine-&gt;context &#x3D; EGL_NO_CONTEXT;<br>    engine-&gt;surface &#x3D; EGL_NO_SURFACE;<br>}</p>
+<p>&#x2F;**<br><em>处理下一输入事件。<br><em>&#x2F;<br>static int32_t engine_handle_input(struct android_app</em> app, AInputEvent</em> event) {<br>    struct engine* engine &#x3D; (struct engine*)app-&gt;userData;<br>    if (AInputEvent_getType(event) &#x3D;&#x3D; AINPUT_EVENT_TYPE_MOTION) {<br>        engine-&gt;state.x &#x3D; AMotionEvent_getX(event, 0);<br>        engine-&gt;state.y &#x3D; AMotionEvent_getY(event, 0);<br>        return 1;<br>    }<br>    return 0;<br>}</p>
+<p>&#x2F;**<br><em>处理下一主命令。<br><em>&#x2F;<br>static void engine_handle_cmd(struct android_app</em> app, int32_t cmd) {<br>    struct engine</em> engine &#x3D; (struct engine*)app-&gt;userData;<br>    switch (cmd) {<br>    case APP_CMD_SAVE_STATE:<br>        &#x2F;&#x2F;系统已经要求我们保存当前状态。就这样做。<br>        engine-&gt;app-&gt;savedState &#x3D; malloc(sizeof(struct saved_state));<br>        <em>((struct saved_state</em>)engine-&gt;app-&gt;savedState) &#x3D; engine-&gt;state;<br>        engine-&gt;app-&gt;savedStateSize &#x3D; sizeof(struct saved_state);<br>        break;<br>    case APP_CMD_INIT_WINDOW:<br>        &#x2F;&#x2F;正在显示窗口，让其准备就绪。<br>        if (engine-&gt;app-&gt;window !&#x3D; NULL) {<br>            engine_init_display(engine);<br>            engine_draw_frame(engine);<br>        }<br>        break;<br>    case APP_CMD_TERM_WINDOW:<br>        &#x2F;&#x2F;正在隐藏或关闭窗口，请其进行清理。<br>        engine_term_display(engine);<br>        break;<br>    case APP_CMD_GAINED_FOCUS:<br>        &#x2F;&#x2F;当我们的应用获得焦点时，我们开始监控加速计。<br>        if (engine-&gt;accelerometerSensor !&#x3D; NULL) {<br>            ASensorEventQueue_enableSensor(engine-&gt;sensorEventQueue,<br>                engine-&gt;accelerometerSensor);<br>            &#x2F;&#x2F;我们想要每秒获得 60 个事件(在美国)。<br>            ASensorEventQueue_setEventRate(engine-&gt;sensorEventQueue,<br>                engine-&gt;accelerometerSensor, (1000L &#x2F; 60) * 1000);<br>        }<br>        break;<br>    case APP_CMD_LOST_FOCUS:<br>        &#x2F;&#x2F;当我们的应用程序失去焦点时，我们会停止监控加速计。<br>        &#x2F;&#x2F;这可在不使用时避免使用电池。<br>        if (engine-&gt;accelerometerSensor !&#x3D; NULL) {<br>            ASensorEventQueue_disableSensor(engine-&gt;sensorEventQueue,<br>                engine-&gt;accelerometerSensor);<br>        }<br>        &#x2F;&#x2F;另外，停止动画。<br>        engine-&gt;animating &#x3D; 0;<br>        engine_draw_frame(engine);<br>        break;<br>    }<br>}</p>
+<p>&#x2F;**</p>
+<ul>
+<li>这是使用 android_native_app_glue</li>
+<li>的本地应用程序的主要入口点。它在其自己的线程中运行，具有自己的</li>
+<li>事件循环用于接收输入事件并执行其他操作。</li>
+</ul>
+<p><em>&#x2F;<br>void android_main(struct android_app</em> state) {<br>    struct engine engine;</p>
+<pre><code>memset(&amp;engine, 0, sizeof(engine));
+state-&gt;userData = &amp;engine;
+state-&gt;onAppCmd = engine_handle_cmd;
+state-&gt;onInputEvent = engine_handle_input;
+engine.app = state;
+
+//准备监控加速器
+engine.sensorManager = ASensorManager_getInstance();
+engine.accelerometerSensor = ASensorManager_getDefaultSensor(engine.sensorManager,
+    ASENSOR_TYPE_ACCELEROMETER);
+engine.sensorEventQueue = ASensorManager_createEventQueue(engine.sensorManager,
+    state-&gt;looper, LOOPER_ID_USER, NULL, NULL);
+
+if (state-&gt;savedState != NULL) &#123;
+    //我们从之前保存的状态开始；从它还原。
+    engine.state = *(struct saved_state*)state-&gt;savedState;
+&#125;
+
+engine.animating = 1;
+
+//循环等待事情以进行处理。
+
+while (1) &#123;
+    //读取所有挂起的事件。
+    int ident;
+    int events;
+    struct android_poll_source* source;
+
+    //如果没有动态效果，我们将一直阻止等待事件。
+    //如果有动态效果，我们进行循环，直到读取所有事件，然后继续
+    //绘制动画的下一帧。
+    while ((ident = ALooper_pollAll(engine.animating ? 0 : -1, NULL, &amp;events,
+        (void**)&amp;source)) &gt;= 0) &#123;
+
+        //处理此事件。
+        if (source != NULL) &#123;
+            source-&gt;process(state, source);
+        &#125;
+
+        //如果传感器有数据，立即处理。
+        if (ident == LOOPER_ID_USER) &#123;
+            if (engine.accelerometerSensor != NULL) &#123;
+                ASensorEvent event;
+                while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
+                    &amp;event, 1) &gt; 0) &#123;
+                    LOGI(&quot;accelerometer: x=%f y=%f z=%f&quot;,
+                        event.acceleration.x, event.acceleration.y,
+                        event.acceleration.z);
+                &#125;
+            &#125;
+        &#125;
+
+        //检查，我们是否存在。
+        if (state-&gt;destroyRequested != 0) &#123;
+            engine_term_display(&amp;engine);
+            return;
+        &#125;
+    &#125;
+
+    if (engine.animating) &#123;
+        //事件完成；绘制下一动画帧。
+        engine.state.angle += .01f;
+        if (engine.state.angle &gt; 1) &#123;
+            engine.state.angle = 0;
+        &#125;
+
+        //绘图被降低到屏幕更新速率，
+        //因此，没有必要在此处计时。
+        engine_draw_frame(&amp;engine);
+    &#125;
+&#125;
+</code></pre>
+<p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">某c</span><br></pre></td></tr></table></figure>
+<p>&#x2F;*</p>
+<ul>
+<li>版权所有 (C) 2010 Android 开放源代码项目</li>
+<li></li>
+<li>按照 Apache 许可 2.0 版本(称为“许可”)授予许可；</li>
+<li>要使用此文件，必须遵循“许可”中的说明。</li>
+<li>你可以从以下位置获取“许可”的副本</li>
+<li></li>
+<li><pre><code> http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+</li>
+<li></li>
+<li>除非适用法律要求或书面同意，根据</li>
+<li>“许可”分配的软件“按原样”分配，</li>
+<li>不提供任何形式(无论是明示还是默示)的担保和条件。</li>
+<li>参见“许可”了解“许可”中管理权限和</li>
+<li>限制的指定语言。</li>
+<li></li>
+</ul>
+<p> *&#x2F;</p>
+<p>#define LOGI(…) ((void)__android_log_print(ANDROID_LOG_INFO, “threaded_app”, <strong>VA_ARGS</strong>))<br>#define LOGE(…) ((void)__android_log_print(ANDROID_LOG_ERROR, “threaded_app”, <strong>VA_ARGS</strong>))</p>
+<p>&#x2F;<em>对于调试版本，始终在此库中启用调试跟踪</em>&#x2F;<br>#ifndef NDEBUG</p>
+<h1 id="define-LOGV-…-void-android-log-print-ANDROID-LOG-VERBOSE-“threaded-app”-VA-ARGS"><a href="#define-LOGV-…-void-android-log-print-ANDROID-LOG-VERBOSE-“threaded-app”-VA-ARGS" class="headerlink" title="define LOGV(…)  ((void)__android_log_print(ANDROID_LOG_VERBOSE, “threaded_app”, VA_ARGS))"></a>define LOGV(…)  ((void)__android_log_print(ANDROID_LOG_VERBOSE, “threaded_app”, <strong>VA_ARGS</strong>))</h1><p>#else</p>
+<h1 id="define-LOGV-…-void-0"><a href="#define-LOGV-…-void-0" class="headerlink" title="define LOGV(…)  ((void)0)"></a>define LOGV(…)  ((void)0)</h1><p>#endif</p>
+<p>static void free_saved_state(struct android_app* android_app) {<br>    pthread_mutex_lock(&amp;android_app-&gt;mutex);<br>    if (android_app-&gt;savedState !&#x3D; NULL) {<br>        free(android_app-&gt;savedState);<br>        android_app-&gt;savedState &#x3D; NULL;<br>        android_app-&gt;savedStateSize &#x3D; 0;<br>    }<br>    pthread_mutex_unlock(&amp;android_app-&gt;mutex);<br>}</p>
+<p>int8_t android_app_read_cmd(struct android_app* android_app) {<br>    int8_t cmd;<br>    if (read(android_app-&gt;msgread, &amp;cmd, sizeof(cmd)) &#x3D;&#x3D; sizeof(cmd)) {<br>        switch (cmd) {<br>            case APP_CMD_SAVE_STATE:<br>                free_saved_state(android_app);<br>                break;<br>        }<br>        return cmd;<br>    } else {<br>        LOGE(“No data on command pipe!”);<br>    }<br>    return -1;<br>}</p>
+<p>static void print_cur_config(struct android_app* android_app) {<br>    char lang[2], country[2];<br>    AConfiguration_getLanguage(android_app-&gt;config, lang);<br>    AConfiguration_getCountry(android_app-&gt;config, country);</p>
+<pre><code>LOGV(&quot;Config: mcc=%d mnc=%d lang=%c%c cnt=%c%c orien=%d touch=%d dens=%d &quot;
+        &quot;keys=%d nav=%d keysHid=%d navHid=%d sdk=%d size=%d long=%d &quot;
+        &quot;modetype=%d modenight=%d&quot;,
+        AConfiguration_getMcc(android_app-&gt;config),
+        AConfiguration_getMnc(android_app-&gt;config),
+        lang[0], lang[1], country[0], country[1],
+        AConfiguration_getOrientation(android_app-&gt;config),
+        AConfiguration_getTouchscreen(android_app-&gt;config),
+        AConfiguration_getDensity(android_app-&gt;config),
+        AConfiguration_getKeyboard(android_app-&gt;config),
+        AConfiguration_getNavigation(android_app-&gt;config),
+        AConfiguration_getKeysHidden(android_app-&gt;config),
+        AConfiguration_getNavHidden(android_app-&gt;config),
+        AConfiguration_getSdkVersion(android_app-&gt;config),
+        AConfiguration_getScreenSize(android_app-&gt;config),
+        AConfiguration_getScreenLong(android_app-&gt;config),
+        AConfiguration_getUiModeType(android_app-&gt;config),
+        AConfiguration_getUiModeNight(android_app-&gt;config));
+</code></pre>
+<p>}</p>
+<p>void android_app_pre_exec_cmd(struct android_app* android_app, int8_t cmd) {<br>    switch (cmd) {<br>        case APP_CMD_INPUT_CHANGED:<br>            LOGV(“APP_CMD_INPUT_CHANGED\n”);<br>            pthread_mutex_lock(&amp;android_app-&gt;mutex);<br>            if (android_app-&gt;inputQueue !&#x3D; NULL) {<br>                AInputQueue_detachLooper(android_app-&gt;inputQueue);<br>            }<br>            android_app-&gt;inputQueue &#x3D; android_app-&gt;pendingInputQueue;<br>            if (android_app-&gt;inputQueue !&#x3D; NULL) {<br>                LOGV(“Attaching input queue to looper”);<br>                AInputQueue_attachLooper(android_app-&gt;inputQueue,<br>                        android_app-&gt;looper, LOOPER_ID_INPUT, NULL,<br>                        &amp;android_app-&gt;inputPollSource);<br>            }<br>            pthread_cond_broadcast(&amp;android_app-&gt;cond);<br>            pthread_mutex_unlock(&amp;android_app-&gt;mutex);<br>            break;</p>
+<pre><code>    case APP_CMD_INIT_WINDOW:
+        LOGV(&quot;APP_CMD_INIT_WINDOW\n&quot;);
+        pthread_mutex_lock(&amp;android_app-&gt;mutex);
+        android_app-&gt;window = android_app-&gt;pendingWindow;
+        pthread_cond_broadcast(&amp;android_app-&gt;cond);
+        pthread_mutex_unlock(&amp;android_app-&gt;mutex);
+        break;
+
+    case APP_CMD_TERM_WINDOW:
+        LOGV(&quot;APP_CMD_TERM_WINDOW\n&quot;);
+        pthread_cond_broadcast(&amp;android_app-&gt;cond);
+        break;
+
+    case APP_CMD_RESUME:
+    case APP_CMD_START:
+    case APP_CMD_PAUSE:
+    case APP_CMD_STOP:
+        LOGV(&quot;activityState=%d\n&quot;, cmd);
+        pthread_mutex_lock(&amp;android_app-&gt;mutex);
+        android_app-&gt;activityState = cmd;
+        pthread_cond_broadcast(&amp;android_app-&gt;cond);
+        pthread_mutex_unlock(&amp;android_app-&gt;mutex);
+        break;
+
+    case APP_CMD_CONFIG_CHANGED:
+        LOGV(&quot;APP_CMD_CONFIG_CHANGED\n&quot;);
+        AConfiguration_fromAssetManager(android_app-&gt;config,
+                android_app-&gt;activity-&gt;assetManager);
+        print_cur_config(android_app);
+        break;
+
+    case APP_CMD_DESTROY:
+        LOGV(&quot;APP_CMD_DESTROY\n&quot;);
+        android_app-&gt;destroyRequested = 1;
+        break;
+&#125;
+</code></pre>
+<p>}</p>
+<p>void android_app_post_exec_cmd(struct android_app* android_app, int8_t cmd) {<br>    switch (cmd) {<br>        case APP_CMD_TERM_WINDOW:<br>            LOGV(“APP_CMD_TERM_WINDOW\n”);<br>            pthread_mutex_lock(&amp;android_app-&gt;mutex);<br>            android_app-&gt;window &#x3D; NULL;<br>            pthread_cond_broadcast(&amp;android_app-&gt;cond);<br>            pthread_mutex_unlock(&amp;android_app-&gt;mutex);<br>            break;</p>
+<pre><code>    case APP_CMD_SAVE_STATE:
+        LOGV(&quot;APP_CMD_SAVE_STATE\n&quot;);
+        pthread_mutex_lock(&amp;android_app-&gt;mutex);
+        android_app-&gt;stateSaved = 1;
+        pthread_cond_broadcast(&amp;android_app-&gt;cond);
+        pthread_mutex_unlock(&amp;android_app-&gt;mutex);
+        break;
+
+    case APP_CMD_RESUME:
+        free_saved_state(android_app);
+        break;
+&#125;
+</code></pre>
+<p>}</p>
+<p>static void android_app_destroy(struct android_app* android_app) {<br>    LOGV(“android_app_destroy!”);<br>    free_saved_state(android_app);<br>    pthread_mutex_lock(&amp;android_app-&gt;mutex);<br>    if (android_app-&gt;inputQueue !&#x3D; NULL) {<br>        AInputQueue_detachLooper(android_app-&gt;inputQueue);<br>    }<br>    AConfiguration_delete(android_app-&gt;config);<br>    android_app-&gt;destroyed &#x3D; 1;<br>    pthread_cond_broadcast(&amp;android_app-&gt;cond);<br>    pthread_mutex_unlock(&amp;android_app-&gt;mutex);<br>    &#x2F;&#x2F;此后，无法接触 android_app 项目。<br>}</p>
+<p>static void process_input(struct android_app* app, struct android_poll_source* source) {<br>    AInputEvent* event &#x3D; NULL;<br>    while (AInputQueue_getEvent(app-&gt;inputQueue, &amp;event) &gt;&#x3D; 0) {<br>        LOGV(“New input event: type&#x3D;%d\n”, AInputEvent_getType(event));<br>        if (AInputQueue_preDispatchEvent(app-&gt;inputQueue, event)) {<br>            continue;<br>        }<br>        int32_t handled &#x3D; 0;<br>        if (app-&gt;onInputEvent !&#x3D; NULL) handled &#x3D; app-&gt;onInputEvent(app, event);<br>        AInputQueue_finishEvent(app-&gt;inputQueue, event, handled);<br>    }<br>}</p>
+<p>static void process_cmd(struct android_app* app, struct android_poll_source* source) {<br>    int8_t cmd &#x3D; android_app_read_cmd(app);<br>    android_app_pre_exec_cmd(app, cmd);<br>    if (app-&gt;onAppCmd !&#x3D; NULL) app-&gt;onAppCmd(app, cmd);<br>    android_app_post_exec_cmd(app, cmd);<br>}</p>
+<p>static void* android_app_entry(void* param) {<br>    struct android_app* android_app &#x3D; (struct android_app*)param;</p>
+<pre><code>android_app-&gt;config = AConfiguration_new();
+AConfiguration_fromAssetManager(android_app-&gt;config, android_app-&gt;activity-&gt;assetManager);
+
+print_cur_config(android_app);
+
+android_app-&gt;cmdPollSource.id = LOOPER_ID_MAIN;
+android_app-&gt;cmdPollSource.app = android_app;
+android_app-&gt;cmdPollSource.process = process_cmd;
+android_app-&gt;inputPollSource.id = LOOPER_ID_INPUT;
+android_app-&gt;inputPollSource.app = android_app;
+android_app-&gt;inputPollSource.process = process_input;
+
+ALooper* looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
+ALooper_addFd(looper, android_app-&gt;msgread, LOOPER_ID_MAIN, ALOOPER_EVENT_INPUT, NULL,
+        &amp;android_app-&gt;cmdPollSource);
+android_app-&gt;looper = looper;
+
+pthread_mutex_lock(&amp;android_app-&gt;mutex);
+android_app-&gt;running = 1;
+pthread_cond_broadcast(&amp;android_app-&gt;cond);
+pthread_mutex_unlock(&amp;android_app-&gt;mutex);
+
+android_main(android_app);
+
+android_app_destroy(android_app);
+return NULL;
+</code></pre>
+<p>}</p>
+<p>&#x2F;&#x2F; ——————————————————————–<br>&#x2F;&#x2F;本地活动交互(从主线程调用)<br>&#x2F;&#x2F; ——————————————————————–</p>
+<p>static struct android_app* android_app_create(ANativeActivity* activity,<br>        void* savedState, size_t savedStateSize) {<br>    struct android_app* android_app &#x3D; (struct android_app*)malloc(sizeof(struct android_app));<br>    memset(android_app, 0, sizeof(struct android_app));<br>    android_app-&gt;activity &#x3D; activity;</p>
+<pre><code>pthread_mutex_init(&amp;android_app-&gt;mutex, NULL);
+pthread_cond_init(&amp;android_app-&gt;cond, NULL);
+
+if (savedState != NULL) &#123;
+    android_app-&gt;savedState = malloc(savedStateSize);
+    android_app-&gt;savedStateSize = savedStateSize;
+    memcpy(android_app-&gt;savedState, savedState, savedStateSize);
+&#125;
+
+int msgpipe[2];
+if (pipe(msgpipe)) &#123;
+    LOGE(&quot;could not create pipe: %s&quot;, strerror(errno));
+    return NULL;
+&#125;
+android_app-&gt;msgread = msgpipe[0];
+android_app-&gt;msgwrite = msgpipe[1];
+
+pthread_attr_t attr; 
+pthread_attr_init(&amp;attr);
+pthread_attr_setdetachstate(&amp;attr, PTHREAD_CREATE_DETACHED);
+pthread_create(&amp;android_app-&gt;thread, &amp;attr, android_app_entry, android_app);
+
+//等待线程启动。
+pthread_mutex_lock(&amp;android_app-&gt;mutex);
+while (!android_app-&gt;running) &#123;
+    pthread_cond_wait(&amp;android_app-&gt;cond, &amp;android_app-&gt;mutex);
+&#125;
+pthread_mutex_unlock(&amp;android_app-&gt;mutex);
+
+return android_app;
+</code></pre>
+<p>}</p>
+<p>static void android_app_write_cmd(struct android_app* android_app, int8_t cmd) {<br>    if (write(android_app-&gt;msgwrite, &amp;cmd, sizeof(cmd)) !&#x3D; sizeof(cmd)) {<br>        LOGE(“Failure writing android_app cmd: %s\n”, strerror(errno));<br>    }<br>}</p>
+<p>static void android_app_set_input(struct android_app* android_app, AInputQueue* inputQueue) {<br>    pthread_mutex_lock(&amp;android_app-&gt;mutex);<br>    android_app-&gt;pendingInputQueue &#x3D; inputQueue;<br>    android_app_write_cmd(android_app, APP_CMD_INPUT_CHANGED);<br>    while (android_app-&gt;inputQueue !&#x3D; android_app-&gt;pendingInputQueue) {<br>        pthread_cond_wait(&amp;android_app-&gt;cond, &amp;android_app-&gt;mutex);<br>    }<br>    pthread_mutex_unlock(&amp;android_app-&gt;mutex);<br>}</p>
+<p>static void android_app_set_window(struct android_app* android_app, ANativeWindow* window) {<br>    pthread_mutex_lock(&amp;android_app-&gt;mutex);<br>    if (android_app-&gt;pendingWindow !&#x3D; NULL) {<br>        android_app_write_cmd(android_app, APP_CMD_TERM_WINDOW);<br>    }<br>    android_app-&gt;pendingWindow &#x3D; window;<br>    if (window !&#x3D; NULL) {<br>        android_app_write_cmd(android_app, APP_CMD_INIT_WINDOW);<br>    }<br>    while (android_app-&gt;window !&#x3D; android_app-&gt;pendingWindow) {<br>        pthread_cond_wait(&amp;android_app-&gt;cond, &amp;android_app-&gt;mutex);<br>    }<br>    pthread_mutex_unlock(&amp;android_app-&gt;mutex);<br>}</p>
+<p>static void android_app_set_activity_state(struct android_app* android_app, int8_t cmd) {<br>    pthread_mutex_lock(&amp;android_app-&gt;mutex);<br>    android_app_write_cmd(android_app, cmd);<br>    while (android_app-&gt;activityState !&#x3D; cmd) {<br>        pthread_cond_wait(&amp;android_app-&gt;cond, &amp;android_app-&gt;mutex);<br>    }<br>    pthread_mutex_unlock(&amp;android_app-&gt;mutex);<br>}</p>
+<p>static void android_app_free(struct android_app* android_app) {<br>    pthread_mutex_lock(&amp;android_app-&gt;mutex);<br>    android_app_write_cmd(android_app, APP_CMD_DESTROY);<br>    while (!android_app-&gt;destroyed) {<br>        pthread_cond_wait(&amp;android_app-&gt;cond, &amp;android_app-&gt;mutex);<br>    }<br>    pthread_mutex_unlock(&amp;android_app-&gt;mutex);</p>
+<pre><code>close(android_app-&gt;msgread);
+close(android_app-&gt;msgwrite);
+pthread_cond_destroy(&amp;android_app-&gt;cond);
+pthread_mutex_destroy(&amp;android_app-&gt;mutex);
+free(android_app);
+</code></pre>
+<p>}</p>
+<p>static void onDestroy(ANativeActivity* activity) {<br>    LOGV(“Destroy: %p\n”, activity);<br>    android_app_free((struct android_app*)activity-&gt;instance);<br>}</p>
+<p>static void onStart(ANativeActivity* activity) {<br>    LOGV(“Start: %p\n”, activity);<br>    android_app_set_activity_state((struct android_app*)activity-&gt;instance, APP_CMD_START);<br>}</p>
+<p>static void onResume(ANativeActivity* activity) {<br>    LOGV(“Resume: %p\n”, activity);<br>    android_app_set_activity_state((struct android_app*)activity-&gt;instance, APP_CMD_RESUME);<br>}</p>
+<p>static void* onSaveInstanceState(ANativeActivity* activity, size_t* outLen) {<br>    struct android_app* android_app &#x3D; (struct android_app*)activity-&gt;instance;<br>    void* savedState &#x3D; NULL;</p>
+<pre><code>LOGV(&quot;SaveInstanceState: %p\n&quot;, activity);
+pthread_mutex_lock(&amp;android_app-&gt;mutex);
+android_app-&gt;stateSaved = 0;
+android_app_write_cmd(android_app, APP_CMD_SAVE_STATE);
+while (!android_app-&gt;stateSaved) &#123;
+    pthread_cond_wait(&amp;android_app-&gt;cond, &amp;android_app-&gt;mutex);
+&#125;
+
+if (android_app-&gt;savedState != NULL) &#123;
+    savedState = android_app-&gt;savedState;
+    *outLen = android_app-&gt;savedStateSize;
+    android_app-&gt;savedState = NULL;
+    android_app-&gt;savedStateSize = 0;
+&#125;
+
+pthread_mutex_unlock(&amp;android_app-&gt;mutex);
+
+return savedState;
+</code></pre>
+<p>}</p>
+<p>static void onPause(ANativeActivity* activity) {<br>    LOGV(“Pause: %p\n”, activity);<br>    android_app_set_activity_state((struct android_app*)activity-&gt;instance, APP_CMD_PAUSE);<br>}</p>
+<p>static void onStop(ANativeActivity* activity) {<br>    LOGV(“Stop: %p\n”, activity);<br>    android_app_set_activity_state((struct android_app*)activity-&gt;instance, APP_CMD_STOP);<br>}</p>
+<p>static void onConfigurationChanged(ANativeActivity* activity) {<br>    struct android_app* android_app &#x3D; (struct android_app*)activity-&gt;instance;<br>    LOGV(“ConfigurationChanged: %p\n”, activity);<br>    android_app_write_cmd(android_app, APP_CMD_CONFIG_CHANGED);<br>}</p>
+<p>static void onLowMemory(ANativeActivity* activity) {<br>    struct android_app* android_app &#x3D; (struct android_app*)activity-&gt;instance;<br>    LOGV(“LowMemory: %p\n”, activity);<br>    android_app_write_cmd(android_app, APP_CMD_LOW_MEMORY);<br>}</p>
+<p>static void onWindowFocusChanged(ANativeActivity* activity, int focused) {<br>    LOGV(“WindowFocusChanged: %p – %d\n”, activity, focused);<br>    android_app_write_cmd((struct android_app*)activity-&gt;instance,<br>            focused ? APP_CMD_GAINED_FOCUS : APP_CMD_LOST_FOCUS);<br>}</p>
+<p>static void onNativeWindowCreated(ANativeActivity* activity, ANativeWindow* window) {<br>    LOGV(“NativeWindowCreated: %p – %p\n”, activity, window);<br>    android_app_set_window((struct android_app*)activity-&gt;instance, window);<br>}</p>
+<p>static void onNativeWindowDestroyed(ANativeActivity* activity, ANativeWindow* window) {<br>    LOGV(“NativeWindowDestroyed: %p – %p\n”, activity, window);<br>    android_app_set_window((struct android_app*)activity-&gt;instance, NULL);<br>}</p>
+<p>static void onInputQueueCreated(ANativeActivity* activity, AInputQueue* queue) {<br>    LOGV(“InputQueueCreated: %p – %p\n”, activity, queue);<br>    android_app_set_input((struct android_app*)activity-&gt;instance, queue);<br>}</p>
+<p>static void onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue) {<br>    LOGV(“InputQueueDestroyed: %p – %p\n”, activity, queue);<br>    android_app_set_input((struct android_app*)activity-&gt;instance, NULL);<br>}</p>
+<p>void ANativeActivity_onCreate(ANativeActivity* activity,<br>        void* savedState, size_t savedStateSize) {<br>    LOGV(“Creating: %p\n”, activity);<br>    activity-&gt;callbacks-&gt;onDestroy &#x3D; onDestroy;<br>    activity-&gt;callbacks-&gt;onStart &#x3D; onStart;<br>    activity-&gt;callbacks-&gt;onResume &#x3D; onResume;<br>    activity-&gt;callbacks-&gt;onSaveInstanceState &#x3D; onSaveInstanceState;<br>    activity-&gt;callbacks-&gt;onPause &#x3D; onPause;<br>    activity-&gt;callbacks-&gt;onStop &#x3D; onStop;<br>    activity-&gt;callbacks-&gt;onConfigurationChanged &#x3D; onConfigurationChanged;<br>    activity-&gt;callbacks-&gt;onLowMemory &#x3D; onLowMemory;<br>    activity-&gt;callbacks-&gt;onWindowFocusChanged &#x3D; onWindowFocusChanged;<br>    activity-&gt;callbacks-&gt;onNativeWindowCreated &#x3D; onNativeWindowCreated;<br>    activity-&gt;callbacks-&gt;onNativeWindowDestroyed &#x3D; onNativeWindowDestroyed;<br>    activity-&gt;callbacks-&gt;onInputQueueCreated &#x3D; onInputQueueCreated;<br>    activity-&gt;callbacks-&gt;onInputQueueDestroyed &#x3D; onInputQueueDestroyed;</p>
+<pre><code>activity-&gt;instance = android_app_create(activity, savedState, savedStateSize);
+</code></pre>
+<p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">某h</span><br></pre></td></tr></table></figure>
+<p>&#x2F;*</p>
+<ul>
+<li>版权所有 (C) 2010 Android 开放源代码项目</li>
+<li></li>
+<li>按照 Apache 许可 2.0 版本(称为“许可”)授予许可；</li>
+<li>要使用此文件，必须遵循“许可”中的说明。</li>
+<li>你可以从以下位置获取“许可”的副本</li>
+<li></li>
+<li><pre><code> http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+</li>
+<li></li>
+<li>除非适用法律要求或书面同意，根据</li>
+<li>“许可”分配的软件“按原样”分配，</li>
+<li>不提供任何形式(无论是明示还是默示)的担保和条件。</li>
+<li>参见“许可”了解“许可”中管理权限和</li>
+<li>限制的指定语言。</li>
+<li></li>
+</ul>
+<p> *&#x2F;</p>
+<p>#ifndef _ANDROID_NATIVE_APP_GLUE_H<br>#define _ANDROID_NATIVE_APP_GLUE_H</p>
+<p>#include &lt;poll.h&gt;<br>#include &lt;pthread.h&gt;<br>#include &lt;sched.h&gt;</p>
+<p>#include &lt;android&#x2F;configuration.h&gt;<br>#include &lt;android&#x2F;looper.h&gt;<br>#include &lt;android&#x2F;native_activity.h&gt;</p>
+<p>#ifdef __cplusplus<br>extern “C” {<br>#endif</p>
+<p>&#x2F;**</p>
+<ul>
+<li>由 &lt;android&#x2F;native_activity.h&gt; 提供的本地活动界面</li>
+<li>基于一组应用程序提供的回调，</li>
+<li>发生某些事件时，活动的主线程将调用这些回调。</li>
+<li></li>
+<li>这意味着，这些回调中的每个回调不应堵塞，否则会有系统</li>
+<li>强制关闭应用程序的风险。此编程</li>
+<li>模型直接、轻型，但是有约束。</li>
+<li></li>
+</ul>
+<p> *“threaded_native_app”静态库用于提供不同的</p>
+<ul>
+<li>执行模型，其中应用程序可在其他</li>
+<li>线程中实施它自己的主要事件循环。其工作方式如下:</li>
+<li></li>
+<li>1&#x2F; 应用程序必须提供名为“android_main()”的函数，</li>
+<li>当在不同于活动的主线程的</li>
+<li>新线程中创建活动时，将调用该函数。</li>
+<li></li>
+<li>2&#x2F; android_main() 接收到指向有效的“android_app”结构的指针，</li>
+<li>该结构包含对其他重要对象(例如，</li>
+<li>应用程序正在其中运行的 ANativeActivity 对象实例)的引用。</li>
+<li></li>
+<li>3&#x2F;“android_app”对象保留已经</li>
+<li>在侦听以下两项重大事件的 ALooper 实例:</li>
+<li></li>
+<li><pre><code> - 活动生命周期事件(例如“暂停”、“恢复”)。参见下文的 APP_CMD_XXX
+</code></pre>
+</li>
+<li><pre><code>   声明。
+</code></pre>
+</li>
+<li></li>
+<li><pre><code> - 来自附加到活动的 AInputQueue 的输入事件。
+</code></pre>
+</li>
+<li></li>
+<li>每个事件都对应于一个由值分别为 LOOPER_ID_MAIN 和 LOOPER_ID_INPUT 的</li>
+<li>ALooper_pollOnce 返回的 ALooper</li>
+<li>标识符。</li>
+<li></li>
+<li>你的应用程序可使用相同的 ALooper 侦听其他</li>
+<li>文件描述符。它们可基于回调或带有以</li>
+<li>LOOPER_ID_USER 开头的返回标识符。</li>
+<li></li>
+<li>4&#x2F; 无论在何时收到 LOOPER_ID_MAIN 或 LOOPER_ID_INPUT 事件，</li>
+<li>返回的数据都将指向 android_poll_source 结构。你</li>
+<li>可对它调用 process() 函数，并填入要调用的 android_app-&gt;onAppCmd</li>
+<li>和 android_app-&gt;onInputEvent，以处理你自己的</li>
+<li>事件。</li>
+<li></li>
+<li>另外，你还可调用低级别函数直接</li>
+<li>读取和处理数据…  查看附加的 process_cmd() 和 process_input()</li>
+<li>实现，以了解如何进行此操作。</li>
+<li></li>
+<li>查看包含完整用例的 NDK 中提供的名为</li>
+</ul>
+<p> *“native-activity”的示例。另请查看 NativeActivity 的 JavaDoc。<br> *&#x2F;</p>
+<p>struct android_app;</p>
+<p>&#x2F;**</p>
+<ul>
+<li>当该源的数据准备就绪后，</li>
+<li>与 ALooper fd 相关的数据将作为“outData”返回。</li>
+</ul>
+<p> *&#x2F;<br>struct android_poll_source {<br>    &#x2F;&#x2F;此源的标识符。  可能是 LOOPER_ID_MAIN 或<br>    &#x2F;&#x2F; LOOPER_ID_INPUT。<br>    int32_t id;</p>
+<pre><code>//此 ident 关联的 android_app。
+struct android_app* app;
+
+//要从此源调用以执行标准数据处理的
+//函数。
+void (*process)(struct android_app* app, struct android_poll_source* source);
+</code></pre>
+<p>};</p>
+<p>&#x2F;**</p>
+<ul>
+<li>这是针对线程化应用程序的标准粘附代码的</li>
+<li>界面。 在此模型中，应用程序的代码在</li>
+<li>其自己的线程中运行，该线程独立于进程的主线程。</li>
+<li>此线程不必与 Java</li>
+<li>VM 关联，尽管它们需要相互关联以使 JNI 调用任何</li>
+<li>Java 对象。</li>
+</ul>
+<p> <em>&#x2F;<br>struct android_app {<br>    &#x2F;&#x2F;如果愿意，应用程序可将指向其自己的状态对象的指针<br>    &#x2F;&#x2F;放在这里。<br>    void</em> userData;</p>
+<pre><code>//在此处填充用于处理主应用命令(APP_CMD_*)的函数
+void (*onAppCmd)(struct android_app* app, int32_t cmd);
+
+//在此处填充用于处理输入事件的函数。此时，
+//事件已经提前分派，一经返回将立即
+//完成。如果你已处理该事件，则返回 1，对于任何默认
+//分派返回 0。
+int32_t (*onInputEvent)(struct android_app* app, AInputEvent* event);
+
+//此应用在其中运行的 ANativeActivity 对象实例。
+ANativeActivity* activity;
+
+//正在运行的应用采用的当前配置。
+AConfiguration* config;
+
+//这是创建时提供的上一个实例的已保存状态。
+//如果没有状态，则为 NULL。你可根据需要使用；
+//内存将保持可用，直到你为 APP_CMD_RESUME 调用 android_app_exec_cmd()，
+//此时，将释放内存，并且 savedState 设置为 NULL。
+//仅当处理 APP_CMD_SAVE_STATE 时才可更改这些变量，
+//此时，这些变量将初始化为 NULL，并且你能够为你的
+//状态分配内存并将信息放在此处。这种情况下，将稍后
+//为你释放内存。
+void* savedState;
+size_t savedStateSize;
+
+//与应用的线程关联的 ALooper。
+ALooper* looper;
+
+//不为 NULL 时，这是一个输入队列，应用将通过它
+//接收用户输入序列。
+AInputQueue* inputQueue;
+
+//不为 NIULL 时，这是应用可在其中进行绘制的窗口界面。
+ANativeWindow* window;
+
+//窗口的当前内容矩形；这是
+//应放置窗口的内容以供用户查看的区域。
+ARect contentRect;
+
+//应用的活动的当前状态。可能是 APP_CMD_START、
+//APP_CMD_RESUME、APP_CMD_PAUSE 或 APP_CMD_STOP；请参见下文。
+int activityState;
+
+//应用程序的 NativeActivity 被破坏并且正在
+//等待应用线程完成时，这为非零值。
+int destroyRequested;
+
+// -------------------------------------------------
+//以下是粘附代码的“私有”实现。
+
+pthread_mutex_t mutex;
+pthread_cond_t cond;
+
+int msgread;
+int msgwrite;
+
+pthread_t thread;
+
+struct android_poll_source cmdPollSource;
+struct android_poll_source inputPollSource;
+
+int running;
+int stateSaved;
+int destroyed;
+int redrawNeeded;
+AInputQueue* pendingInputQueue;
+ANativeWindow* pendingWindow;
+ARect pendingContentRect;
+</code></pre>
+<p>};</p>
+<p>enum {<br>    &#x2F;**<br>     *命令的 Looper 数据 ID，其中的命令来自应用的主线程，该数据 ID 作为一个标识符从<br>     *ALooper_pollOnce() 返回。  此<br>     * 标识符的数据是指向 android_poll_source structure 结构的指针。<br>     * 可使用 android_app_read_cmd()<br>     * 和 android_app_exec_cmd() 检索和处理这些数据。<br>     *&#x2F;<br>    LOOPER_ID_MAIN &#x3D; 1,</p>
+<pre><code>/**
+ * 事件的 Looper 数据 ID，其中的事件来自应用程序窗口的 AInputQueue，
+ * 该数据 ID 作为一个标识符从
+ * ALooper_pollOnce() 返回。此标识符的数据是指向
+ * android_poll_source 结构的指针。这些数据可通过
+ *android_app 的 inputQueue 对象读取。
+ */
+LOOPER_ID_INPUT = 2,
+
+/**
+ * 用户定义的 ALooper 标识符的开头。
+ */
+LOOPER_ID_USER = 3,
+</code></pre>
+<p>};</p>
+<p>enum {<br>    &#x2F;**<br>     * 来自主线程的命令: AInputQueue 已更改。  处理<br>     * 此命令时，android_app-&gt;inputQueue 将更新到新的队列<br>     * (或 NULL)。<br>     *&#x2F;<br>    APP_CMD_INPUT_CHANGED,</p>
+<pre><code>/**
+ * 来自主线程的命令: 新的 ANativeWindow 已准备就绪可供使用。  接收到
+ * 此命令后，android_app-&gt;window 将包含新的窗口
+ * 界面。
+ */
+APP_CMD_INIT_WINDOW,
+
+/**
+ * 来自主线程的命令: 需要终止
+ * 目前的 ANativeWindow。  收到此命令后，android_app-&gt;window 仍
+ * 包含现有窗口；调用 android_app_exec_cmd 后，
+ * 它将被设置为 NULL。
+ */
+APP_CMD_TERM_WINDOW,
+
+/**
+ * 来自主线程的命令: 已调整当前 ANativeWindow 的大小。
+ * 请根据它的新大小重新绘制。
+ */
+APP_CMD_WINDOW_RESIZED,
+
+/**
+ * 来自主线程的命令: 系统需要重新绘制
+ * 当前 ANativeWindow。  你应该在进行相关处理之前将窗口重新绘制到
+ * android_app_exec_cmd()，以避免短暂的绘制故障。
+ */
+APP_CMD_WINDOW_REDRAW_NEEDED,
+
+/**
+ *来自主线程的命令: 窗口的内容区域已更改，
+ * 例如，从显示或隐藏的软输入窗口更改为其他区域。  你可在
+ *android_app::contentRect 中找到新的内容矩形。
+ */
+APP_CMD_CONTENT_RECT_CHANGED,
+
+/**
+ * 来自主线程的命令: 应用的活动窗口已获得
+ * 输入焦点。
+ */
+APP_CMD_GAINED_FOCUS,
+
+/**
+ * 来自主线程的命令: 应用的活动窗口已丢失
+ *输入焦点。
+ */
+APP_CMD_LOST_FOCUS,
+
+/**
+ * 来自主线程的命令: 当前设备配置已更改。
+ */
+APP_CMD_CONFIG_CHANGED,
+
+/**
+ * 来自主线程的命令: 系统在运行时内存不足。
+ * 尝试减少你的内存使用。
+ */
+APP_CMD_LOW_MEMORY,
+
+/**
+ * 来自主线程的命令: 应用的活动已启动。
+ */
+APP_CMD_START,
+
+/**
+ * 来自主线程的命令: 应用的活动已恢复。
+ */
+APP_CMD_RESUME,
+
+/**
+ * 来自主线程的命令: 应用应为它自己生成新的已保存状态，
+ * 以便今后在需要时从其进行还原。  如果你有已保存状态，
+ * 通过分配内存对其进行分配并将其以
+ * android_app.savedStateSize 中的大小放在 android_app.savedState 中。  这样会稍后为你
+ * 释放内存。
+ */
+APP_CMD_SAVE_STATE,
+
+/**
+ * 来自主线程的命令: 应用的活动已暂停。
+ */
+APP_CMD_PAUSE,
+
+/**
+ * 来自主线程的命令: 应用的活动已停止。
+ */
+APP_CMD_STOP,
+
+/**
+ * 来自主线程的命令: 应用的活动已被破坏，
+ * 正在等待应用程清理并退出，然后继续。
+ */
+APP_CMD_DESTROY,
+</code></pre>
+<p>};</p>
+<p>&#x2F;**</p>
+<ul>
+<li>ALooper_pollAll() 返回 LOOPER_ID_MAIN 时调用，读取下一</li>
+<li>应用命令消息。</li>
+</ul>
+<p> <em>&#x2F;<br>int8_t android_app_read_cmd(struct android_app</em> android_app);</p>
+<p>&#x2F;**</p>
+<ul>
+<li>用 android_app_read_cmd() 返回的命令调用，以对</li>
+<li>给定的命令进行初始预处理。调用此函数后，你可对</li>
+<li>命令执行你自己的操作。</li>
+</ul>
+<p> <em>&#x2F;<br>void android_app_pre_exec_cmd(struct android_app</em> android_app, int8_t cmd);</p>
+<p>&#x2F;**</p>
+<ul>
+<li>用 android_app_read_cmd() 返回的命令调用，以对</li>
+<li>给定的命令进行最终后处理。调用此函数前，必须先对</li>
+<li>命令执行你自己的操作。</li>
+</ul>
+<p> <em>&#x2F;<br>void android_app_post_exec_cmd(struct android_app</em> android_app, int8_t cmd);</p>
+<p>&#x2F;**</p>
+<ul>
+<li>这是应用程序代码必须实现的函数，表示</li>
+<li>应用的主索引项。</li>
+</ul>
+<p> <em>&#x2F;<br>extern void android_main(struct android_app</em> app);</p>
+<p>#ifdef __cplusplus<br>}<br>#endif</p>
+<p>#endif &#x2F;* _ANDROID_NATIVE_APP_GLUE_H *&#x2F;</p>
+<pre><code>
+</code></pre>
+</div></article></div><div class="right-container"><div class="widget"><div class="category"><h4>分类归档</h4><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Android-bug%E5%BC%82%E5%B8%B8%E4%B8%8E%E8%A7%A3%E5%86%B3/">Android-bug异常与解决</a><span class="category-list-count">80</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Blog/">Blog</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Photo/">Photo</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/QQ%E6%8A%80%E5%B7%A7/">QQ技巧</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/andorid%E8%A7%A6%E6%91%B8%E4%B8%8E%E6%BB%91%E5%8A%A8/">andorid触摸与滑动</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android/">android</a><span class="category-list-count">128</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android-System/">android-System</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/androidUi%E5%B7%A9%E5%9B%BA%E7%AC%94%E8%AE%B0/">androidUi巩固笔记</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/androidtv%E5%BC%80%E5%8F%91/">androidtv开发</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E5%8A%A8%E7%94%BB/">android动画</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%8F%92%E4%BB%B6%E5%8C%96/">android插件化</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%9E%B6%E6%9E%84%E5%B8%88%E8%BF%9B%E9%98%B6/">android架构师进阶</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">android源码分析</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%9B%BE%E5%BD%A2%E7%BB%98%E5%88%B6/">android自定义与图形绘制</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/c/">c#</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/c-c-JNI-Ndk/">c-c---JNI-Ndk</a><span class="category-list-count">88</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/eclipse/">eclipse</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/git/">git</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/gradle/">gradle</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/ide%E6%8A%80%E5%B7%A7/">ide技巧</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java/">java</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kotlin-android/">kotlin--android</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kotlin-with-java/">kotlin-with-java</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/linux/">linux</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/mac-ios/">mac-ios</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/php/">php</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/python/">python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/shell-bat-lua%E8%84%9A%E6%9C%AC/">shell-bat-lua脚本</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/window/">window</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E4%B8%8A%E8%BD%A6/">上车</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%AC%E5%91%8A/">公告</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%89%8D%E7%AB%AF/">前端</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%8A%9E%E5%85%AC/">办公</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%90%8E%E7%AB%AF/">后端</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/">地球</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/">中国</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/%E6%B9%96%E5%8D%97/">湖南</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/%E6%B9%96%E5%8D%97/%E5%A8%84%E5%BA%95/">娄底</a><span class="category-list-count">1</span></li></ul></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9E%83%E5%9C%BE%E5%A0%86/">垃圾堆</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%A5%87%E6%B7%AB%E6%8A%80%E5%B7%A7/">奇淫技巧</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8A%80%E5%B7%A7/">小程序技巧</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%83%85%E8%BF%81QQ%E6%9C%BA%E5%99%A8%E4%BA%BA/">情迁QQ机器人</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%83%85%E8%BF%81%E8%BD%AF%E4%BB%B6/">情迁软件</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%89%93%E8%B5%8F/">打赏</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E5%AD%A6/">数学</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%97%A5%E8%AE%B0%E6%9C%AC/">日记本</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%87%E7%BC%96/">汇编</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B5%8B%E8%AF%95/">测试</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B5%8B%E8%AF%95%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8C%96/">测试与自动化</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6/">版本控制</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A1%AC%E4%BB%B6%E7%BB%B4%E4%BF%AE/">硬件维修</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A6%8F%E5%88%A9/">福利</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A7%91%E5%B9%BB/">科幻</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E6%95%B0%E5%AD%A6%E9%97%AE%E9%A2%98/">程序员的数学问题</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E6%9D%82%E9%A1%B9/">编程杂项</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BD%91%E7%AB%99%E5%BB%BA%E8%AE%BE/">网站建设</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BD%91%E7%BB%9C/">网络</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BE%8E%E5%A5%B3/">美女</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BF%BB%E8%AF%91%E8%A7%86%E9%A2%91%E6%95%99%E7%A8%8B/">翻译视频教程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%B0%E5%BF%86/">记忆</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%B7%A8%E5%B9%B3%E5%8F%B0app/">跨平台app</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%B7%AF%E7%94%B1%E5%99%A8/">路由器</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%80%86%E5%90%91/">逆向</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%80%86%E5%90%91%E4%B8%8E%E5%AE%89%E5%85%A8/">逆向与安全</a><span class="category-list-count">80</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/">随笔</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E8%AF%95%E6%94%BB%E5%85%8B/">面试攻克</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9F%B3%E8%A7%86%E9%A2%91%E5%A4%84%E7%90%86/">音视频处理</a><span class="category-list-count">7</span></li></ul></div></div><div class="widget"><div class="tagcloud"><h4>标签云</h4><a href="/tags/Android-bug%E5%BC%82%E5%B8%B8%E4%B8%8E%E8%A7%A3%E5%86%B3/" style="font-size: 18.7px;">Android-bug异常与解决</a> <a href="/tags/CDN/" style="font-size: 10px;">CDN</a> <a href="/tags/Git/" style="font-size: 10.43px;">Git</a> <a href="/tags/JAVA/" style="font-size: 10px;">JAVA</a> <a href="/tags/Lua/" style="font-size: 10px;">Lua</a> <a href="/tags/QQ%E6%8A%80%E5%B7%A7/" style="font-size: 10px;">QQ技巧</a> <a href="/tags/WEB/" style="font-size: 10.43px;">WEB</a> <a href="/tags/andorid%E8%A7%A6%E6%91%B8%E4%B8%8E%E6%BB%91%E5%8A%A8/" style="font-size: 13.91px;">andorid触摸与滑动</a> <a href="/tags/android/" style="font-size: 19.57px;">android</a> <a href="/tags/android-studio/" style="font-size: 10px;">android studio</a> <a href="/tags/android-System/" style="font-size: 16.09px;">android-System</a> <a href="/tags/androidUi%E5%B7%A9%E5%9B%BA%E7%AC%94%E8%AE%B0/" style="font-size: 11.74px;">androidUi巩固笔记</a> <a href="/tags/androidtv%E5%BC%80%E5%8F%91/" style="font-size: 10.43px;">androidtv开发</a> <a href="/tags/android%E5%8A%A8%E7%94%BB/" style="font-size: 10px;">android动画</a> <a href="/tags/android%E6%8F%92%E4%BB%B6%E5%8C%96/" style="font-size: 15.22px;">android插件化</a> <a href="/tags/android%E6%9E%B6%E6%9E%84%E5%B8%88%E8%BF%9B%E9%98%B6/" style="font-size: 10.43px;">android架构师进阶</a> <a href="/tags/android%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" style="font-size: 12.61px;">android源码分析</a> <a href="/tags/android%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%9B%BE%E5%BD%A2%E7%BB%98%E5%88%B6/" style="font-size: 16.52px;">android自定义与图形绘制</a> <a href="/tags/c/" style="font-size: 17.39px;">c#</a> <a href="/tags/c-c-JNI-Ndk/" style="font-size: 19.13px;">c-c---JNI-Ndk</a> <a href="/tags/consectetur/" style="font-size: 10px;">consectetur</a> <a href="/tags/eclipse/" style="font-size: 12.61px;">eclipse</a> <a href="/tags/git/" style="font-size: 13.48px;">git</a> <a href="/tags/gradle/" style="font-size: 16.96px;">gradle</a> <a href="/tags/ide%E6%8A%80%E5%B7%A7/" style="font-size: 16.52px;">ide技巧</a> <a href="/tags/java/" style="font-size: 15.65px;">java</a> <a href="/tags/kotlin-android/" style="font-size: 10.87px;">kotlin--android</a> <a href="/tags/kotlin-with-java/" style="font-size: 16.09px;">kotlin-with-java</a> <a href="/tags/linux/" style="font-size: 11.3px;">linux</a> <a href="/tags/mac-ios/" style="font-size: 17.83px;">mac-ios</a> <a href="/tags/markdown/" style="font-size: 10px;">markdown</a> <a href="/tags/php/" style="font-size: 13.91px;">php</a> <a href="/tags/python/" style="font-size: 16.09px;">python</a> <a href="/tags/shell-bat-lua%E8%84%9A%E6%9C%AC/" style="font-size: 12.61px;">shell-bat-lua脚本</a> <a href="/tags/window/" style="font-size: 14.35px;">window</a> <a href="/tags/xposed%E6%8F%92%E4%BB%B6/" style="font-size: 10px;">xposed插件</a> <a href="/tags/%E4%B8%83%E7%89%9B/" style="font-size: 10px;">七牛</a> <a href="/tags/%E4%B8%8A%E8%BD%A6/" style="font-size: 12.17px;">上车</a> <a href="/tags/%E4%BB%A3%E7%A0%81%E7%BC%96%E5%86%99/" style="font-size: 10px;">代码编写</a> <a href="/tags/%E5%85%8DRoot/" style="font-size: 10px;">免Root</a> <a href="/tags/%E5%85%AC%E5%91%8A/" style="font-size: 11.3px;">公告</a> <a href="/tags/%E5%88%86%E8%BA%AB%E5%A4%A7%E5%B8%88/" style="font-size: 10px;">分身大师</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 12.17px;">前端</a> <a href="/tags/%E5%8A%9E%E5%85%AC/" style="font-size: 10px;">办公</a> <a href="/tags/%E5%90%8E%E7%AB%AF/" style="font-size: 10px;">后端</a> <a href="/tags/%E5%9B%BE%E7%89%87/" style="font-size: 10px;">图片</a> <a href="/tags/%E5%9E%83%E5%9C%BE%E5%A0%86/" style="font-size: 15.22px;">垃圾堆</a> <a href="/tags/%E5%A5%87%E6%B7%AB%E6%8A%80%E5%B7%A7/" style="font-size: 14.35px;">奇淫技巧</a> <a href="/tags/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8A%80%E5%B7%A7/" style="font-size: 13.04px;">小程序技巧</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 10.87px;">性能优化</a> <a href="/tags/%E6%83%85%E8%BF%81QQ%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 10px;">情迁QQ机器人</a> <a href="/tags/%E6%83%85%E8%BF%81%E8%BD%AF%E4%BB%B6/" style="font-size: 18.26px;">情迁软件</a> <a href="/tags/%E6%89%93%E8%B5%8F/" style="font-size: 10px;">打赏</a> <a href="/tags/%E6%8F%92%E4%BB%B6/" style="font-size: 10px;">插件</a> <a href="/tags/%E6%95%B0%E5%AD%A6/" style="font-size: 12.17px;">数学</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" style="font-size: 11.74px;">数据库</a> <a href="/tags/%E6%97%A5%E8%AE%B0%E6%9C%AC/" style="font-size: 10.43px;">日记本</a> <a href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 10px;">机器人</a> <a href="/tags/%E6%B1%87%E7%BC%96/" style="font-size: 10px;">汇编</a> <a href="/tags/%E6%B5%8B%E8%AF%95%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8C%96/" style="font-size: 10.43px;">测试与自动化</a> <a href="/tags/%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6/" style="font-size: 10.43px;">版本控制</a> <a href="/tags/%E7%94%9F%E6%B4%BB/" style="font-size: 15.22px;">生活</a> <a href="/tags/%E7%A1%AC%E4%BB%B6%E7%BB%B4%E4%BF%AE/" style="font-size: 10px;">硬件维修</a> <a href="/tags/%E7%A6%8F%E5%88%A9/" style="font-size: 10.43px;">福利</a> <a href="/tags/%E7%A7%91%E5%B9%BB/" style="font-size: 10px;">科幻</a> <a href="/tags/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E6%95%B0%E5%AD%A6%E9%97%AE%E9%A2%98/" style="font-size: 13.91px;">程序员的数学问题</a> <a href="/tags/%E7%BC%96%E7%A8%8B%E6%9D%82%E9%A1%B9/" style="font-size: 13.91px;">编程杂项</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 11.3px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91%E8%A7%86%E9%A2%91%E6%95%99%E7%A8%8B/" style="font-size: 10px;">翻译视频教程</a> <a href="/tags/%E8%97%8F%E5%93%81/" style="font-size: 20px;">藏品</a> <a href="/tags/%E8%A7%86%E9%A2%91/" style="font-size: 10px;">视频</a> <a href="/tags/%E8%AE%B0%E5%BF%86/" style="font-size: 11.3px;">记忆</a> <a href="/tags/%E8%B7%A8%E5%B9%B3%E5%8F%B0app/" style="font-size: 14.78px;">跨平台app</a> <a href="/tags/%E8%B7%AF%E7%94%B1%E5%99%A8/" style="font-size: 10.87px;">路由器</a> <a href="/tags/%E9%80%86%E5%90%91/" style="font-size: 10px;">逆向</a> <a href="/tags/%E9%80%86%E5%90%91%E4%B8%8E%E5%AE%89%E5%85%A8/" style="font-size: 18.7px;">逆向与安全</a> <a href="/tags/%E9%93%BE%E6%8E%A5/" style="font-size: 10.43px;">链接</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 11.74px;">随笔</a> <a href="/tags/%E9%9D%A2%E8%AF%95%E6%94%BB%E5%85%8B/" style="font-size: 10.43px;">面试攻克</a> <a href="/tags/%E9%9F%B3%E8%A7%86%E9%A2%91%E5%A4%84%E7%90%86/" style="font-size: 12.61px;">音视频处理</a></div></div><div class="widget"><div class="recent"><h4>最近文章</h4><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/06/30/soft_use_status/">soft_use_status</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/06/30/hello-world%E4%B8%8Ehexo%E7%9A%84%E5%BC%80%E5%A7%8B/">Hello World</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/03/05/%E3%80%90%E5%8E%9F%E5%88%9B%E3%80%91flutter%E4%B9%8B%E5%8F%91%E5%B8%83%E6%8F%92%E4%BB%B6%E5%8C%85%E5%88%B0pub-dev%E7%A6%BB%E7%BA%BF%E5%9C%A8%E7%BA%BF%E4%B8%A4%E5%A5%97%E5%A4%A7%E6%B3%95/">【原创】flutter之发布插件包到pubdev离线在线两套大法</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/31/markdown-support%E6%8F%92%E4%BB%B6%E7%9A%84%E5%AE%89%E8%A3%85%E6%96%B9%E6%B3%95/">markdownsupport插件的安装方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/16/%5B%E5%8E%9F%E5%88%9B%5D%E7%94%B5%E8%84%91vpn%E5%85%B1%E4%BA%AB%E6%88%90wifi%E7%BD%91%E7%BB%9C%E8%AE%A9%E6%89%80%E6%9C%89%E7%94%B5%E8%84%91%E6%89%8B%E6%9C%BA%E8%AE%BE%E5%A4%87%E4%B9%9F%E8%83%BD%E8%AE%BF%E9%97%AE%E5%85%B6%E5%AE%83%E5%8C%BA%E5%9F%9F%E5%86%85%E7%BD%91/">原创电脑vpn共享成wifi网络让所有电脑手机设备也能访问其它区域内网</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/06/%E5%85%B3%E4%BA%8E%E6%9F%90bilibli%E4%B8%8B%E8%BD%BD%E5%99%A8%E7%BC%BA%E9%99%B7%E4%B8%8B%E8%BD%BD%E7%9A%84%E6%96%87%E4%BB%B6%E5%9C%A8%E6%96%87%E4%BB%B6%E5%A4%B9%E5%AD%90%E7%9B%AE%E5%BD%95%E4%BF%AE%E6%AD%A3%E6%96%B9%E6%B3%95/">关于某bilibli下载器缺陷下载的文件在文件夹子目录修正方法</a></li></ul></div></div><div class="widget"><div id="arAnchorBar"></div></div></div></section></div><div class="right-menu"></div><div class="modal search-modal"><div class="input-field"><input type="text" id="search_input"><label for="search-input">搜索</label></div><div id="search_result" class="search-result"></div></div><div class="blog-overlay"></div><footer class="row"><div class="footer-con"><div class="paginator"><a href="/2018/10/21/%5B%E5%8E%9F%E5%88%9B%5Dvisual-studio-so%E7%94%9F%E6%88%90%E6%8C%87%E4%BB%A4%E5%AE%8F%E5%AE%9A%E4%B9%89%E8%87%AA%E5%8A%A8%E5%A4%8D%E5%88%B6/" class="prev">PREV</a><a href="/2018/10/21/%5B%E5%8E%9F%E5%88%9B%5Dandroid%E8%B5%84%E6%BA%90xml%E9%A2%9C%E8%89%B2%E5%80%BC%E8%BF%9B%E5%88%B6%E6%8E%A8%E7%AE%97/" class="next">NEXT</a></div><!--PC和WAP自适应版--><div id="SOHUCS" sid="2018/10/21/构建NativeActivity-没有dex-没有java代码的apk也能在手机上跑起来/"> </div><script>(function() {
+    var appid = 'cytVgXm93'; 
+    var conf = 'e46b9c0a4ede5c70e062020c1d3651e1';
+    var width = window.innerWidth || document.documentElement.clientWidth; 
+    if (width < 960) { 
+    window.document.write('<script id="changyan_mobile_js" charset="utf-8" type="text/javascript" src="https://changyan.sohu.com/upload/mobile/wap-js/changyan_mobile.js?client_id=' + appid + '&conf=' + conf + '"><\/script>'); } else { var loadJs=function(d,a){var c=document.getElementsByTagName("head")[0]||document.head||document.documentElement;var b=document.createElement("script");b.setAttribute("type","text/javascript");b.setAttribute("charset","UTF-8");b.setAttribute("src",d);if(typeof a==="function"){if(window.attachEvent){b.onreadystatechange=function(){var e=b.readyState;if(e==="loaded"||e==="complete"){b.onreadystatechange=null;a()}}}else{b.onload=a}}c.appendChild(b)};loadJs("https://changyan.sohu.com/upload/changyan.js",function(){window.changyan.api.config({appid:appid,conf:conf})}); } })();</script><div class="copyright"><p>© 2015 - 2022 <a target="_blank">情随事迁</a>, 微博 <a href="https://weibo.com/qssq666" target="_blank">qssq666</a> <br>  <a href="https://space.bilibili.com/101043764?spm_id_from=333.1007.0.0" target="_blank">bilibli</a>  <a href="https://www.jianshu.com/u/9b0768e66d01" target="_blank">简书</a></p><p>总计访问量 <i data-hk-site="-"></i></p></div><div class="totop"><i></i></div></div></footer>
+<script async src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src="http://apps.bdimg.com/libs/jquery/1.8.2/jquery.min.js"></script><script src="/scripts/av-min-1.5.0.js"></script><script src="/scripts/hit-kounter-lc-0.3.0.js"></script><script src="/scripts/arAnchor.js"></script><script src="/scripts/main.js"></script></body></html>

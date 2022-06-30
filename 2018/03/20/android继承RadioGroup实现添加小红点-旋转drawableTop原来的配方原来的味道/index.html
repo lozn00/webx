@@ -1,0 +1,861 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="baidu-site-verification" content=""><meta name="google-site-verification" content="UKlpQSB6IlVlxjxgprQbTNRUiLE1BnpIV5zeQ_MYkks"><title> android继承RadioGroup实现添加小红点旋转drawableTop原来的配方原来的味道 · 情迁博客</title><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="android继承RadioGroup实现添加小红点旋转drawableTop原来的配方原来的味道 - 情随事迁"><meta name="keywords"><meta name="author" content="情随事迁"><meta name="referrer" content="no-referrer"><link rel="short icon" href="/images/favicon.ico"><link rel="stylesheet" href="/css/bubuzou.css"><link rel="search" type="application/opensearchdescription+xml" href="https://lozn.top/atom.xml" title="情迁博客"><meta name="generator" content="Hexo 5.4.1"></head><body><header><div class="header row"> <a href="/" class="logo-link"><img src="/images/logo.png"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/archives/" target="_self" data-hover="归档" class="nav-list-link">归档</a></li><li class="nav-list-item"><a href="https://godhand.lozn.top" target="_blank" data-hover="神之手" class="nav-list-link">神之手</a></li><li class="nav-list-item"><a href="https://robot.lozn.top" target="_blank" data-hover="机器人" class="nav-list-link">机器人</a></li><li class="nav-list-item"><a href="/categories/情迁软件/" target="_self" data-hover="情迁" class="nav-list-link">情迁</a></li><li class="nav-list-item"><a href="https://www.jianshu.com/u/9b0768e66d01" target="_blank" data-hover="简书" class="nav-list-link">简书</a></li><li class="nav-list-item"><a href="/update/" target="_self" data-hover="下载" class="nav-list-link">下载</a></li><li class="nav-list-item"><a href="/about/" target="_self" data-hover="关于" class="nav-list-link">关于</a></li></ul><div class="search"><a id="search_btn" href="#search"></a></div></div></header><div class="row scroll-con"><section class="container"><!-- for archive page --><div id="postAr" class="post"><article class="post-block"><h1 class="post-title">android继承RadioGroup实现添加小红点旋转drawableTop原来的配方原来的味道</h1><div class="post-info">2018-03-20<p class="visit"><i data-hk-page="current">Loading</i><span>次访问</span></p></div><div class="post-content"><p>简书链接:<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/dfd06a955a05">android继承RadioGroup实现添加小红点旋转drawableTop原来的配方原来的味道</a><br>文章字数：859,阅读全文大约需要3分钟</p>
+<p>github.com源码库 实现了加小红点，以及解决原来的<code>drawableTop</code>旋转 不能调节速度问题,卡顿问题</p>
+<p>我这里的<code>app:drawableTop</code>支持旋转动画  </p>
+<p><a target="_blank" rel="noopener" href="https://github.com/qssq/radiogroupx">https://github.com/qssq/radiogroupx</a><br><img src="https://upload-images.jianshu.io/upload_images/2815884-2274fa64c8a2f28c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/300" alt="这是效果图"></p>
+<p>顺便亮一亮我的代码堆栈</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">at cn.qssq666.radiogroupx.RadioGroupX.setCheckedStateForView(RadioGroupX.java:160)</span><br><span class="line">at cn.qssq666.radiogroupx.RadioGroupX.access$500(RadioGroupX.java:35)</span><br><span class="line">at cn.qssq666.radiogroupx.RadioGroupX$CheckedStateTracker.onCheckedChanged(RadioGroupX.java:322)</span><br><span class="line">at cn.qssq666.radiogroupx.ProxyWrapRadioButtonInner$1.onCheckedChanged(ProxyWrapRadioButtonInner.java:96)</span><br><span class="line">at android.widget.CompoundButton.setChecked(CompoundButton.java:159)</span><br><span class="line">at android.widget.CompoundButton.toggle(CompoundButton.java:115)</span><br><span class="line">at android.widget.RadioButton.toggle(RadioButton.java:76)</span><br><span class="line">at android.widget.CompoundButton.performClick(CompoundButton.java:120)</span><br><span class="line">at android.view.View$PerformClick.run(View.java:22295)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><figcaption><span>其实 ,```RadioButton```和```CheckBox```的父类```CompoundButton```类有一个内部的选中监听类,</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在调用```setCheck```的时候会回调2个监听</span><br></pre></td></tr></table></figure>
+<pre><code>if (mOnCheckedChangeListener != null) &#123;
+            mOnCheckedChangeListener.onCheckedChanged(this, mChecked);
+        &#125;
+        if (mOnCheckedChangeWidgetListener != null) &#123;
+            mOnCheckedChangeWidgetListener.onCheckedChanged(this, mChecked);
+        &#125;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">我这里```mOnCheckedChangeWidgetListener ```是通过反射才能够实现兼容```RadioButton```的 这有啥办法,谁叫它私有化了,这让我怎么搞嘛。.</span><br><span class="line"></span><br><span class="line">直接上源码</span><br></pre></td></tr></table></figure>
+<p>package cn.qssq666.radiogroupx;&#x2F;*</p>
+<ul>
+<li>Copyright (C) 2006 The Android Open Source Project</li>
+<li></li>
+<li>Licensed under the Apache License, Version 2.0 (the “License”);</li>
+<li>you may not use this file except in compliance with the License.</li>
+<li>You may obtain a copy of the License at</li>
+<li></li>
+<li><pre><code> http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+</li>
+<li></li>
+<li>Unless required by applicable law or agreed to in writing, software</li>
+<li>distributed under the License is distributed on an “AS IS” BASIS,</li>
+<li>WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</li>
+<li>See the License for the specific language governing permissions and</li>
+<li>limitations under the License.</li>
+</ul>
+<p> *&#x2F;</p>
+<p>import android.content.Context;<br>import android.content.res.TypedArray;<br>import android.os.Build;<br>import android.util.AttributeSet;<br>import android.view.View;<br>import android.view.ViewGroup;<br>import android.view.accessibility.AccessibilityEvent;<br>import android.view.accessibility.AccessibilityNodeInfo;<br>import android.widget.Checkable;<br>import android.widget.CompoundButton;<br>import android.widget.LinearLayout;</p>
+<p>import java.lang.reflect.InvocationTargetException;<br>import java.lang.reflect.Method;<br>import java.util.Random;</p>
+<p>public class RadioGroupX extends LinearLayout {<br>    &#x2F;&#x2F; holds the checked id; the selection is empty by default<br>    private int mCheckedId &#x3D; -1;<br>    &#x2F;&#x2F; tracks children radio buttons checked state<br>    private CompoundButton.OnCheckedChangeListener mChildOnCheckedChangeListener;<br>    &#x2F;&#x2F; when true, mOnCheckedChangeListener discards events<br>    private boolean mProtectFromCheckedChange &#x3D; false;<br>    private OnCheckedChangeListener mOnCheckedChangeListener;<br>    private PassThroughHierarchyChangeListener mPassThroughListener;</p>
+<pre><code>public RadioGroupX(Context context) &#123;
+    super(context);
+    setOrientation(VERTICAL);
+    init();
+&#125;
+
+public RadioGroupX(Context context, AttributeSet attrs) &#123;
+    super(context, attrs);
+
+    TypedArray attributes = context.obtainStyledAttributes(
+            attrs, R.styleable.RadioGroupX, R.attr.radioButtonStyle, 0);
+
+    int value = attributes.getResourceId(R.styleable.RadioGroupX_checkedButton, View.NO_ID);
+    if (value != View.NO_ID) &#123;
+        mCheckedId = value;
+    &#125;
+</code></pre>
+<p>&#x2F;&#x2F;        int orientation &#x3D; getOrientation();</p>
+<pre><code>    final int index = attributes.getInt(R.styleable.RadioGroupX_orientation, VERTICAL);
+    setOrientation(index);
+    attributes.recycle();
+    init();
+&#125;
+
+private void init() &#123;
+    mChildOnCheckedChangeListener = new CheckedStateTracker();
+    mPassThroughListener = new PassThroughHierarchyChangeListener();
+    super.setOnHierarchyChangeListener(mPassThroughListener);
+&#125;
+
+/**
+ * &#123;@inheritDoc&#125;
+ */
+@Override
+public void setOnHierarchyChangeListener(OnHierarchyChangeListener listener) &#123;
+    // the user listener is delegated to our pass-through listener
+    mPassThroughListener.mOnHierarchyChangeListener = listener;
+&#125;
+
+/**
+ * &#123;@inheritDoc&#125;
+ */
+@Override
+protected void onFinishInflate() &#123;
+    super.onFinishInflate();
+
+    // checks the appropriate radio button as requested in the XML file
+    if (mCheckedId != -1) &#123;
+        mProtectFromCheckedChange = true;
+        setCheckedStateForView(mCheckedId, true);
+        mProtectFromCheckedChange = false;
+        setCheckedId(mCheckedId);
+    &#125;
+&#125;
+
+@Override
+public void addView(View child, int index, ViewGroup.LayoutParams params) &#123;
+    if (child instanceof Checkable &amp;&amp; child instanceof View) &#123;
+        final Checkable button = (Checkable) child;
+        if (button.isChecked()) &#123;
+            mProtectFromCheckedChange = true;
+            if (mCheckedId != -1) &#123;
+                setCheckedStateForView(mCheckedId, false);
+            &#125;
+            mProtectFromCheckedChange = false;
+
+            setCheckedId(((View) button).getId());
+        &#125;
+    &#125;
+
+    super.addView(child, index, params);
+&#125;
+
+/**
+ * &lt;p&gt;Sets the selection to the radio button whose identifier is passed in
+ * parameter. Using -1 as the selection identifier clears the selection;
+ * such an operation is equivalent to invoking &#123;@link #clearCheck()&#125;.&lt;/p&gt;
+ *
+ * @param id the unique id of the radio button to select in this group
+ * @see #getCheckedRadioButtonId()
+ * @see #clearCheck()
+ */
+public void check(int id) &#123;
+    // don&#39;t even bother
+    if (id != -1 &amp;&amp; (id == mCheckedId)) &#123;
+        return;
+    &#125;
+
+    if (mCheckedId != -1) &#123;
+        setCheckedStateForView(mCheckedId, false);
+    &#125;
+
+    if (id != -1) &#123;
+        setCheckedStateForView(id, true);
+    &#125;
+
+    setCheckedId(id);
+&#125;
+
+private void setCheckedId(int id) &#123;
+    mCheckedId = id;
+    if (mOnCheckedChangeListener != null) &#123;
+        mOnCheckedChangeListener.onCheckedChanged(this, mCheckedId);
+    &#125;
+&#125;
+
+private void setCheckedStateForView(int viewId, boolean checked) &#123;
+    View checkedView = findViewById(viewId);
+    if (checkedView != null &amp;&amp; checkedView instanceof Checkable) &#123;
+        ((Checkable) checkedView).setChecked(checked);
+    &#125;
+&#125;
+
+/**
+ * &lt;p&gt;Returns the identifier of the selected radio button in this group.
+ * Upon empty selection, the returned value is -1.&lt;/p&gt;
+ *
+ * @return the unique id of the selected radio button in this group
+ * @attr ref android.R.styleable#RadioGroup_checkedButton
+ * @see #check(int)
+ * @see #clearCheck()
+ */
+public int getCheckedRadioButtonId() &#123;
+    return mCheckedId;
+&#125;
+
+/**
+ * &lt;p&gt;Clears the selection. When the selection is cleared, no radio button
+ * in this group is selected and &#123;@link #getCheckedRadioButtonId()&#125; returns
+ * null.&lt;/p&gt;
+ *
+ * @see #check(int)
+ * @see #getCheckedRadioButtonId()
+ */
+public void clearCheck() &#123;
+    check(-1);
+&#125;
+
+/**
+ * &lt;p&gt;Register a callback to be invoked when the checked radio button
+ * changes in this group.&lt;/p&gt;
+ *
+ * @param listener the callback to call on checked state change
+ */
+public void setOnCheckedChangeListener(OnCheckedChangeListener listener) &#123;
+    mOnCheckedChangeListener = listener;
+&#125;
+
+/**
+ * &#123;@inheritDoc&#125;
+ */
+@Override
+public LayoutParams generateLayoutParams(AttributeSet attrs) &#123;
+    return new RadioGroupX.LayoutParams(getContext(), attrs);
+&#125;
+
+/**
+ * &#123;@inheritDoc&#125;
+ */
+@Override
+protected boolean checkLayoutParams(ViewGroup.LayoutParams p) &#123;
+    return p instanceof RadioGroupX.LayoutParams;
+&#125;
+
+@Override
+protected LinearLayout.LayoutParams generateDefaultLayoutParams() &#123;
+    return new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+&#125;
+
+@Override
+public void onInitializeAccessibilityEvent(AccessibilityEvent event) &#123;
+    super.onInitializeAccessibilityEvent(event);
+    event.setClassName(RadioGroupX.class.getName());
+&#125;
+
+@Override
+public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) &#123;
+    super.onInitializeAccessibilityNodeInfo(info);
+    info.setClassName(RadioGroupX.class.getName());
+&#125;
+
+public static class LayoutParams extends LinearLayout.LayoutParams &#123;
+    /**
+     * &#123;@inheritDoc&#125;
+     */
+    public LayoutParams(Context c, AttributeSet attrs) &#123;
+        super(c, attrs);
+    &#125;
+
+    /**
+     * &#123;@inheritDoc&#125;
+     */
+    public LayoutParams(int w, int h) &#123;
+        super(w, h);
+    &#125;
+
+    /**
+     * &#123;@inheritDoc&#125;
+     */
+    public LayoutParams(int w, int h, float initWeight) &#123;
+        super(w, h, initWeight);
+    &#125;
+
+    /**
+     * &#123;@inheritDoc&#125;
+     */
+    public LayoutParams(ViewGroup.LayoutParams p) &#123;
+        super(p);
+    &#125;
+
+    /**
+     * &#123;@inheritDoc&#125;
+     */
+    public LayoutParams(MarginLayoutParams source) &#123;
+        super(source);
+    &#125;
+
+    /**
+     * &lt;p&gt;Fixes the child&#39;s width to
+     * &#123;@link ViewGroup.LayoutParams#WRAP_CONTENT&#125; and the child&#39;s
+     * height to  &#123;@link ViewGroup.LayoutParams#WRAP_CONTENT&#125;
+     * when not specified in the XML file.&lt;/p&gt;
+     *
+     * @param a          the styled attributes set
+     * @param widthAttr  the width attribute to fetch
+     * @param heightAttr the height attribute to fetch
+     */
+    @Override
+    protected void setBaseAttributes(TypedArray a,
+                                     int widthAttr, int heightAttr) &#123;
+
+        if (a.hasValue(widthAttr)) &#123;
+            width = a.getLayoutDimension(widthAttr, &quot;layout_width&quot;);
+        &#125; else &#123;
+            width = WRAP_CONTENT;
+        &#125;
+
+        if (a.hasValue(heightAttr)) &#123;
+            height = a.getLayoutDimension(heightAttr, &quot;layout_height&quot;);
+        &#125; else &#123;
+            height = WRAP_CONTENT;
+        &#125;
+    &#125;
+&#125;
+
+/**
+ * &lt;p&gt;Interface definition for a callback to be invoked when the checked
+ * radio button changed in this group.&lt;/p&gt;
+ */
+public interface OnCheckedChangeListener &#123;
+    /**
+     * &lt;p&gt;Called when the checked radio button has changed. When the
+     * selection is cleared, checkedId is -1.&lt;/p&gt;
+     *
+     * @param group     the group in which the checked radio button has changed
+     * @param checkedId the unique identifier of the newly checked radio button
+     */
+    public void onCheckedChanged(RadioGroupX group, int checkedId);
+&#125;
+
+private class CheckedStateTracker implements CompoundButton.OnCheckedChangeListener &#123;
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) &#123;
+        // prevents from infinite recursion
+        if (mProtectFromCheckedChange) &#123;
+            return;
+        &#125;
+
+        mProtectFromCheckedChange = true;
+        if (mCheckedId != -1) &#123;
+            setCheckedStateForView(mCheckedId, false);
+        &#125;
+        mProtectFromCheckedChange = false;
+
+        int id = buttonView.getId();
+        setCheckedId(id);
+    &#125;
+&#125;
+
+/**
+ * &lt;p&gt;A pass-through listener acts upon the events and dispatches them
+ * to another listener. This allows the table layout to set its own internal
+ * hierarchy change listener without preventing the user to setup his.&lt;/p&gt;
+ */
+private class PassThroughHierarchyChangeListener implements
+        OnHierarchyChangeListener &#123;
+    private OnHierarchyChangeListener mOnHierarchyChangeListener;
+
+    /**
+     * &#123;@inheritDoc&#125;
+     */
+    public void onChildViewAdded(View parent, View child) &#123;
+        if ((child instanceof Checkable || child instanceof RadioGroupX.OnCheckedChangeWidgetListener)) &#123;
+</code></pre>
+<p>&#x2F;&#x2F;            if (parent &#x3D;&#x3D; RadioGroupX.this &amp;&amp; (child instanceof Checkable || child instanceof RadioGroupX.OnCheckedChangeWidgetListener)) {<br>                int id &#x3D; child.getId();<br>                &#x2F;&#x2F; generates an id if it’s missing<br>                if (id &#x3D;&#x3D; View.NO_ID) {<br>                    if (Build.VERSION.SDK_INT &gt;&#x3D; Build.VERSION_CODES.JELLY_BEAN_MR1) {<br>                        id &#x3D; View.generateViewId();<br>                    } else {<br>                        id &#x3D; new Random().nextInt(10000);<br>                    }<br>                    child.setId(id);<br>                }<br>                setRadioButtonOnCheckedChangeWidgetListener(child,<br>                        mChildOnCheckedChangeListener);<br>            }</p>
+<pre><code>        if (mOnHierarchyChangeListener != null) &#123;
+            mOnHierarchyChangeListener.onChildViewAdded(parent, child);
+        &#125;
+    &#125;
+
+    /**
+     * &#123;@inheritDoc&#125;
+     */
+    public void onChildViewRemoved(View parent, View child) &#123;
+        if ((child instanceof Checkable || child instanceof RadioGroupX.OnCheckedChangeWidgetListener)) &#123;
+</code></pre>
+<p>&#x2F;&#x2F;            if (parent &#x3D;&#x3D; RadioGroupX.this &amp;&amp; (child instanceof Checkable || child instanceof RadioGroupX.OnCheckedChangeWidgetListener)) {<br>                setRadioButtonOnCheckedChangeWidgetListener(child, null);<br>            }</p>
+<pre><code>        if (mOnHierarchyChangeListener != null) &#123;
+            mOnHierarchyChangeListener.onChildViewRemoved(parent, child);
+        &#125;
+    &#125;
+&#125;
+
+
+public static boolean setRadioButtonOnCheckedChangeWidgetListener(View view, CompoundButton.OnCheckedChangeListener listener) &#123;
+    Class aClass = view.getClass();
+    if (view instanceof OnCheckedChangeWidgetListener) &#123;
+        ((OnCheckedChangeWidgetListener) view).setOnCheckedChangeWidgetListener(listener);
+    &#125; else &#123;
+        while (aClass != Object.class) &#123;
+       /*
+         void setOnCheckedChangeWidgetListener(OnCheckedChangeListener listener) &#123;
+    mOnCheckedChangeWidgetListener = listener;
+&#125;
+
+        */
+            try &#123;
+                Method setOnCheckedChangeWidgetListener = aClass.getDeclaredMethod(&quot;setOnCheckedChangeWidgetListener&quot;, CompoundButton.OnCheckedChangeListener.class);
+                setOnCheckedChangeWidgetListener.setAccessible(true);
+                setOnCheckedChangeWidgetListener.invoke(view, listener);
+                return true;
+            &#125; catch (NoSuchMethodException e) &#123;
+                e.printStackTrace();
+                aClass = aClass.getSuperclass();
+            &#125; catch (IllegalAccessException e) &#123;
+                e.printStackTrace();
+                aClass = aClass.getSuperclass();
+            &#125; catch (InvocationTargetException e) &#123;
+                e.printStackTrace();
+                aClass = aClass.getSuperclass();
+            &#125;
+        &#125;
+
+    &#125;
+    return false;
+
+&#125;
+
+public interface OnCheckedChangeWidgetListener &#123;
+    void setOnCheckedChangeWidgetListener(CompoundButton.OnCheckedChangeListener onCheckedChangeWidgetListener);
+&#125;
+</code></pre>
+<p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">BadgeRadioButton</span><br></pre></td></tr></table></figure>
+<p>package cn.qssq666.radiogroupx;</p>
+<p>import android.content.Context;<br>import android.content.res.ColorStateList;<br>import android.content.res.Resources;<br>import android.content.res.TypedArray;<br>import android.graphics.Color;<br>import android.graphics.drawable.Drawable;<br>import android.graphics.drawable.GradientDrawable;<br>import android.text.InputFilter;<br>import android.text.TextUtils;<br>import android.util.AttributeSet;<br>import android.view.Gravity;<br>import android.view.MotionEvent;<br>import android.view.SoundEffectConstants;<br>import android.view.View;<br>import android.view.animation.AccelerateInterpolator;<br>import android.view.animation.AlphaAnimation;<br>import android.view.animation.Animation;<br>import android.view.animation.DecelerateInterpolator;<br>import android.widget.Checkable;<br>import android.widget.CompoundButton;<br>import android.widget.RadioButton;<br>import android.widget.RelativeLayout;<br>import android.widget.TextView;</p>
+<p>&#x2F;**</p>
+<ul>
+<li>Created by qssq on 2018&#x2F;1&#x2F;19 <a href="mailto:&#x71;&#x73;&#x73;&#113;&#x36;&#x36;&#x36;&#x40;&#x66;&#111;&#x78;&#109;&#97;&#105;&#x6c;&#x2e;&#x63;&#111;&#x6d;">&#x71;&#x73;&#x73;&#113;&#x36;&#x36;&#x36;&#x40;&#x66;&#111;&#x78;&#109;&#97;&#105;&#x6c;&#x2e;&#x63;&#111;&#x6d;</a></li>
+</ul>
+<p> *&#x2F;</p>
+<p>public class BadgeRadioButton extends RelativeLayout implements Checkable, RadioGroupX.OnCheckedChangeWidgetListener {</p>
+<pre><code>private static final String TAG = &quot;BadgeRadioButton&quot;;
+private RadioButton radioButton;
+private boolean isShown;
+private TextView badgePointView;
+private int minBadgeSize;
+private int badgeRadius;
+
+public BadgeRadioButton(Context context) &#123;
+    super(context);
+    init(context, null, 0);
+&#125;
+
+public BadgeRadioButton(Context context, AttributeSet attrs) &#123;
+    super(context, attrs);
+    init(context, attrs, 0);
+&#125;
+
+
+ColorStateList textColor = null;
+ColorStateList textColorHint = null;
+int textSize = 10;
+Drawable drawableLeft = null, drawableTop = null, drawableRight = null,
+        drawableBottom = null, drawableStart = null, drawableEnd = null;
+int drawablePadding = 0;
+int ellipsize = -1;
+CharSequence text = &quot;&quot;;
+CharSequence badgetext = &quot;&quot;;
+int badgetextSize = 12;
+
+public boolean isNotNeedDight() &#123;
+    return notNeedDight;
+&#125;
+
+public void setNotNeedDight(boolean notNeedDight) &#123;
+    this.notNeedDight = notNeedDight;
+</code></pre>
+<p>&#x2F;&#x2F;        int i &#x3D; dp2px(getContext(), 5);<br>        if (notNeedDight) {<br>&#x2F;&#x2F;        this.badgePointView.setPadding(0, 0, 0, 0);</p>
+<pre><code>        setBadgePointPadding(0);
+    &#125; else &#123;
+        int padding = dp2px(getContext(), 1.5);
+        setBadgePointPadding(padding);
+    &#125;
+</code></pre>
+<p>&#x2F;&#x2F;        postInvalidate();<br>    }</p>
+<pre><code>/**
+ * 不需要数字表示只需要一个红点.这个时候padding需要修改一下
+ */
+boolean notNeedDight;
+ColorStateList badgetextColor = null;
+
+
+@Override
+public boolean onTouchEvent(MotionEvent event) &#123;
+    return radioButton.onTouchEvent(event);
+</code></pre>
+<p>&#x2F;&#x2F;        return super.onTouchEvent(event);<br>    }</p>
+<pre><code>@Override
+public boolean onInterceptTouchEvent(MotionEvent ev) &#123;
+    return super.onInterceptTouchEvent(ev);
+&#125;
+
+private void init(Context context, AttributeSet attrs, int defStyleAttr) &#123;
+
+    final Resources.Theme theme = context.getTheme();
+
+    /*
+     * Look the appearance up without checking first if it exists because
+     * almost every TextView has one and it greatly simplifies the logic
+     * to be able to parse the appearance first and then let specific tags
+     * for this View override it.
+     */
+    radioButton = new RadioButton(context, attrs, defStyleAttr);
+
+    //配置多少就有多少.的tyearray
+    TypedArray typedArrayTextView = theme.obtainStyledAttributes(
+            attrs, R.styleable.BadgeRadioButton, defStyleAttr, 0);
+
+    int count = typedArrayTextView.getIndexCount();
+    if (BuildConfig.DEBUG) &#123;
+        Prt.w(TAG, &quot;badgeButton Count:&quot; + count);
+
+    &#125;
+    /*
+            app:badgeRadius=&quot;8dp&quot;
+                app:badgetextSize=&quot;5dp&quot;
+                app:minBadgeSize=&quot;2dp&quot;
+     */
+    notNeedDight = typedArrayTextView.getBoolean(R.styleable.BadgeRadioButton_onlypointer, false);  //设置描边颜色
+    badgetextSize = typedArrayTextView.getDimensionPixelSize(R.styleable.BadgeRadioButton_badgetextSize, isNotNeedDight() ?
+            dp2px(getContext(), 5) : dp2px(getContext(), 10));
+    minBadgeSize = typedArrayTextView.getDimensionPixelSize(R.styleable.BadgeRadioButton_minBadgeSize, isNotNeedDight() ?
+            dp2px(getContext(), 2) : dp2px(getContext(), 16));
+    badgeRadius = typedArrayTextView.getDimensionPixelSize(R.styleable.BadgeRadioButton_badgeRadius, isNotNeedDight() ?
+            dp2px(getContext(), 8) : dp2px(getContext(), 8));
+    int badgePadding = typedArrayTextView.getDimensionPixelSize(R.styleable.BadgeRadioButton_badgePadding, isNotNeedDight() ? 0 : dp2px(getContext(), 2));
+
+    for (int i = 0; i &lt; count; i++) &#123;
+        int attr = typedArrayTextView.getIndex(i);
+
+        switch (attr) &#123;
+            case R.styleable.BadgeRadioButton_drawableLeft:
+                drawableLeft = typedArrayTextView.getDrawable(attr);
+                break;
+
+            case R.styleable.BadgeRadioButton_drawableTop:
+                drawableTop = typedArrayTextView.getDrawable(attr);
+                break;
+
+            case R.styleable.BadgeRadioButton_drawableRight:
+                drawableRight = typedArrayTextView.getDrawable(attr);
+                break;
+
+            case R.styleable.BadgeRadioButton_drawableBottom:
+                drawableBottom = typedArrayTextView.getDrawable(attr);
+                break;
+
+            case R.styleable.BadgeRadioButton_drawableStart:
+                drawableStart = typedArrayTextView.getDrawable(attr);
+                break;
+      /*      case R.styleable.BadgeRadioButton_onlypointer:
+                notNeedDight = typedArrayTextView.getBoolean(attr, false);//default need dight 不需要数字和仅仅需要点一个意思 由于循环优先级出现问题，导致默认只也有问题
+                break;*/
+
+            case R.styleable.BadgeRadioButton_drawableEnd:
+                drawableEnd = typedArrayTextView.getDrawable(attr);
+                break;
+
+
+            case R.styleable.BadgeRadioButton_drawablePadding:
+                drawablePadding = typedArrayTextView.getDimensionPixelSize(attr, drawablePadding);
+                break;
+            case R.styleable.BadgeRadioButton_buttongravity:
+                radioButton.setGravity(typedArrayTextView.getInt(attr, -1));
+                break;
+            case R.styleable.BadgeRadioButton_text:
+                text = typedArrayTextView.getText(attr);
+                break;
+            case R.styleable.BadgeRadioButton_badgetext:
+                badgetext = typedArrayTextView.getText(attr);
+                if (!isNotNeedDight() &amp;&amp; TextUtils.isEmpty(badgetext)) &#123;
+</code></pre>
+<p>&#x2F;&#x2F;                        badgetext &#x3D; “ “;<br>                    }<br>                    break;<br>                case R.styleable.BadgeRadioButton_ellipsize:<br>                    ellipsize &#x3D; typedArrayTextView.getInt(attr, ellipsize);<br>                    break;</p>
+<pre><code>            case R.styleable.BadgeRadioButton_enabled:
+                setEnabled(typedArrayTextView.getBoolean(attr, isEnabled()));
+                break;
+
+
+            case R.styleable.BadgeRadioButton_buttontextColor:
+                textColor = typedArrayTextView.getColorStateList(attr);
+                break;
+            case R.styleable.BadgeRadioButton_badgetextColor:
+                badgetextColor = typedArrayTextView.getColorStateList(attr);
+                break;
+            case R.styleable.BadgeRadioButton_buttontextSize:
+                textSize = typedArrayTextView.getDimensionPixelSize(attr, textSize);
+                break;
+        &#125;
+    &#125;
+
+    typedArrayTextView.recycle();
+    radioButton.setTextColor(textColor != null ? textColor : ColorStateList.valueOf(0xFF000000));
+
+    radioButton.setButtonDrawable(0);
+
+    radioButton.setBackgroundResource(0);
+    setClickable(true);
+    radioButton.setClickable(true);
+    radioButton.setHintTextColor(textColorHint != null ? textColorHint : ColorStateList.valueOf(0xFF000000));
+    radioButton.setText(text);
+    fadeIn = new AlphaAnimation(0, 1);
+    fadeIn.setInterpolator(new DecelerateInterpolator());
+    fadeIn.setDuration(200);
+
+    fadeOut = new AlphaAnimation(1, 0);
+    fadeOut.setInterpolator(new AccelerateInterpolator());
+    fadeOut.setDuration(200);
+    setRawTextSize(radioButton, textSize, false);
+    radioButton.setCompoundDrawablesWithIntrinsicBounds(
+            drawableLeft, drawableTop, drawableRight, drawableBottom);
+
+    //            radioButton.setRelativeDrawablesIfNeeded(drawableStart, drawableEnd);
+    radioButton.setCompoundDrawablePadding(drawablePadding);
+    radioButton.setId(getId());
+    LayoutParams layoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+    layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+    addView(radioButton, layoutParams);
+
+    badgePointView = new TextView(context);
+
+    setBadgePointDrawable(getContext(), badgeRadius);
+
+    badgePointView.setText(badgetext);
+</code></pre>
+<p>&#x2F;*        if (TextUtils.isEmpty(badgetext) &amp;&amp; !isNotNeedDight()) {<br>            hide();<br>        } else {<br>            show();<br>        }*&#x2F;<br>        if (badgetextColor !&#x3D; null) {<br>            badgePointView.setTextColor(badgetextColor);</p>
+<pre><code>    &#125; else &#123;
+        badgePointView.setTextColor(Color.WHITE);
+    &#125;
+    badgePointView.setEllipsize(TextUtils.TruncateAt.END);
+    badgePointView.setGravity(Gravity.CENTER);
+    setRawTextSize(badgePointView, badgetextSize, false);
+    setMinBadgeSize(context, minBadgeSize);
+</code></pre>
+<p>&#x2F;&#x2F;        badgePointView.maxl(dp2px(context,20));&#x2F;&#x2F;maxLength<br>        if (notNeedDight) {<br>            setBadgePointPadding(0);<br>        } else {<br>            setBadgePointPadding(badgePadding);</p>
+<pre><code>    &#125;
+    badgePointView.setLines(1);
+    badgePointView.setFilters(new InputFilter[]&#123;new InputFilter.LengthFilter(1)&#125;);
+    layoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+    layoutParams.addRule(RelativeLayout.ALIGN_TOP, radioButton.getId());
+    layoutParams.addRule(RelativeLayout.ALIGN_RIGHT, radioButton.getId());
+
+    /*
+           &lt;item name=&quot;android:ellipsize&quot;&gt;end&lt;/item&gt;
+    &lt;item name=&quot;android:minWidth&quot;&gt;20dp&lt;/item&gt;
+    &lt;item name=&quot;android:minHeight&quot;&gt;20dp&lt;/item&gt;
+    &lt;item name=&quot;android:gravity&quot;&gt;center&lt;/item&gt;
+    &lt;item name=&quot;android:maxLength&quot;&gt;4&lt;/item&gt;
+    &lt;item name=&quot;android:lines&quot;&gt;1&lt;/item&gt;
+    &lt;item name=&quot;android:text&quot;&gt;1&lt;/item&gt;
+    &lt;item name=&quot;android:layout_gravity&quot;&gt;top|right&lt;/item&gt;
+    &lt;item name=&quot;android:paddingTop&quot;&gt;1.5dp&lt;/item&gt;
+    &lt;item name=&quot;android:paddingBottom&quot;&gt;1.5dp&lt;/item&gt;
+    &lt;item name=&quot;android:paddingLeft&quot;&gt;1.5dp&lt;/item&gt;
+    &lt;item name=&quot;android:paddingRight&quot;&gt;1.5dp&lt;/item&gt;
+    &lt;item name=&quot;android:textColor&quot;&gt;@color/colorWhite&lt;/item&gt;
+    &lt;item name=&quot;android:textSize&quot;&gt;@dimen/text_size_12&lt;/item&gt;
+    &lt;item name=&quot;android:background&quot;&gt;@drawable/shape_circle_badge&lt;/item&gt;
+    &lt;item name=&quot;android:layout_width&quot;&gt;wrap_content&lt;/item&gt;
+    &lt;item name=&quot;android:layout_height&quot;&gt;wrap_content&lt;/item&gt;*/
+
+
+    addView(badgePointView, layoutParams);
+
+&#125;
+
+private void setMinBadgeSize(Context context, int px) &#123;
+    badgePointView.setMinWidth(px);
+    badgePointView.setMinHeight(px);
+</code></pre>
+<p>&#x2F;*        badgePointView.setMinWidth(dp2px(context, px));<br>        badgePointView.setMinHeight(dp2px(context, px));*&#x2F;<br>    }</p>
+<pre><code>public void setBadgePointPadding(int padding) &#123;
+    badgePointView.setPadding(padding, padding, padding, padding);
+&#125;
+
+public void setBadgePointDrawable(Context context, int badgeRadius) &#123;
+    GradientDrawable gradientDrawable = new GradientDrawable();
+    gradientDrawable.setShape(GradientDrawable.RECTANGLE);
+    gradientDrawable.setSize(badgeRadius, badgeRadius);
+    gradientDrawable.setCornerRadius(badgeRadius);
+    gradientDrawable.setColor(Color.parseColor(&quot;#ef132c&quot;));
+    setBadgePointDrawable(context, gradientDrawable);
+&#125;
+
+
+public void setBadgePointDrawable(Context context, Drawable drawable) &#123;
+    badgePointView.setBackgroundDrawable(drawable);
+&#125;
+
+
+protected int dp2px(Context context, double dpValue) &#123;
+    final float scale = context.getResources().getDisplayMetrics().density;//density=dpi/160
+    return (int) (dpValue * scale + 0.5f);
+
+&#125;
+
+
+private void setRawTextSize(TextView textView, float size, boolean shouldRequestLayout) &#123;
+    if (size != textView.getPaint().getTextSize()) &#123;
+        textView.getPaint().setTextSize(size);
+
+        if (shouldRequestLayout &amp;&amp; textView.getLayout() != null) &#123;
+            requestLayout();
+            invalidate();
+        &#125;
+    &#125;
+&#125;
+
+public BadgeRadioButton(Context context, AttributeSet attrs, int defStyleAttr) &#123;
+    super(context, attrs, defStyleAttr);
+    init(context, attrs, defStyleAttr);
+&#125;
+
+public final void setText(CharSequence text) &#123;
+    radioButton.setText(text);
+&#125;
+
+@Override
+public void setChecked(boolean checked) &#123;
+    radioButton.setChecked(checked);
+
+   /* if (mOnCheckedChangeWidgetListener != null) &#123;
+        mOnCheckedChangeWidgetListener.onCheckedChanged(this, mChecked);
+    &#125;*/
+
+&#125;
+
+@Override
+public boolean isChecked() &#123;
+    return radioButton.isChecked();
+&#125;
+
+@Override
+public void toggle() &#123;
+
+    if (!radioButton.isChecked()) &#123;
+        radioButton.toggle();
+    &#125;
+&#125;
+
+
+@Override
+public boolean performClick() &#123;
+    toggle();
+
+    final boolean handled = super.performClick();
+    if (!handled) &#123;
+        // View only makes a sound effect if the onClickListener was
+        // called, so we&#39;ll need to make one here instead.
+        playSoundEffect(SoundEffectConstants.CLICK);
+    &#125;
+
+    return handled;
+&#125;
+
+@Override
+public void setOnCheckedChangeWidgetListener(CompoundButton.OnCheckedChangeListener onCheckedChangeWidgetListener) &#123;
+    RadioGroupX.setRadioButtonOnCheckedChangeWidgetListener(radioButton, onCheckedChangeWidgetListener);
+&#125;
+
+
+/**
+ * Make the badge visible in the UI.
+ */
+public void show() &#123;
+    show(false, null);
+&#125;
+
+/**
+ * Make the badge visible in the UI.
+ *
+ * @param animate flag to apply the default fade-in animation.
+ */
+public void show(boolean animate) &#123;
+    show(animate, fadeIn);
+&#125;
+
+/**
+ * Make the badge visible in the UI.
+ *
+ * @param anim Animation to apply to the view when made visible.
+ */
+public void show(Animation anim) &#123;
+    show(true, anim);
+&#125;
+
+/**
+ * Make the badge non-visible in the UI.
+ */
+public void hide() &#123;
+    hide(false, null);
+&#125;
+
+/**
+ * Make the badge non-visible in the UI.
+ *
+ * @param animate flag to apply the default fade-out animation.
+ */
+public void hide(boolean animate) &#123;
+    hide(animate, fadeOut);
+&#125;
+
+/**
+ * Make the badge non-visible in the UI.
+ *
+ * @param anim Animation to apply to the view when made non-visible.
+ */
+public void hide(Animation anim) &#123;
+    hide(true, anim);
+&#125;
+
+/**
+ * Toggle the badge visibility in the UI.
+ *
+ * @param animate flag to apply the default fade-in/out animation.
+ */
+public void toggle(boolean animate) &#123;
+    toggle(animate, fadeIn, fadeOut);
+&#125;
+
+/**
+ * Toggle the badge visibility in the UI.
+ *
+ * @param animIn  Animation to apply to the view when made visible.
+ * @param animOut Animation to apply to the view when made non-visible.
+ */
+public void toggle(Animation animIn, Animation animOut) &#123;
+    toggle(true, animIn, animOut);
+&#125;
+
+private void show(boolean animate, Animation anim) &#123;
+
+    if (animate) &#123;
+        badgePointView.startAnimation(anim);
+    &#125;
+    badgePointView.setVisibility(View.VISIBLE);
+    isShown = true;
+&#125;
+
+private void hide(boolean animate, Animation anim) &#123;
+    badgePointView.setVisibility(View.GONE);
+    if (animate) &#123;
+        badgePointView.startAnimation(anim);
+    &#125;
+    isShown = false;
+&#125;
+
+private void toggle(boolean animate, Animation animIn, Animation animOut) &#123;
+    if (isShown) &#123;
+        hide(animate &amp;&amp; (animOut != null), animOut);
+    &#125; else &#123;
+        show(animate &amp;&amp; (animIn != null), animIn);
+    &#125;
+&#125;
+
+private static Animation fadeIn;
+private static Animation fadeOut;
+</code></pre>
+<p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">最后，还可以通过绘制添加小红点 继承```RadioButton```</span><br></pre></td></tr></table></figure>
+<p>@Override<br>protected void onDraw(Canvas canvas) {<br>    super.onDraw(canvas);<br>    if (notify) {</p>
+<pre><code>    //获取到DrawableTop,  0 drawableleft 1 drawabletop 2 drawableright 3 drawablebottom
+    Drawable drawable = getCompoundDrawables()[1];
+
+    //获取到Drawable的left right top bottom的值
+    Rect bounds = drawable.getBounds();
+
+    //这里分析： 
+    //getMeasuredWidth() / 2 等于整个控件的水平位置中心点
+    //bounds.width() /2 drawable宽度的一半
+    //radius / 2 小圆点宽度的一半
+    //由于我们在布局文件中设置了Gravity为Center，所以最后小红点的x坐标为drawable图片右边对其+radius/2的位置上
+    float cx = getMeasuredWidth() / 2 + bounds.width() / 2 - radius / 2;
+    //y就比较好定义了，为drawable 1/4即可
+    float cy = getPaddingTop() + bounds.height() / 4;
+
+    //float cx, float cy, float radius, @NonNull Paint paint
+    //把小红点绘制上去
+    canvas.drawCircle(cx, cy, radius, paint);
+&#125;
+</code></pre>
+<p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">另外，我打算改一下我的```RadioGroupX```让它支持直接findById我发现有人非常好</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">具体是这篇文章了</span><br></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/Jaylong/p/radiogroup.html">https://www.cnblogs.com/Jaylong/p/radiogroup.html</a></p>
+<pre><code>
+我这里踩到的坑是兼容findbyid寻找index,兼容点击图片和点击文字都可以触发  兼容双击到顶,具体可以看我另外的一篇文章
+</code></pre>
+</div></article></div><div class="right-container"><div class="widget"><div class="category"><h4>分类归档</h4><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Android-bug%E5%BC%82%E5%B8%B8%E4%B8%8E%E8%A7%A3%E5%86%B3/">Android-bug异常与解决</a><span class="category-list-count">80</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Blog/">Blog</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Photo/">Photo</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/QQ%E6%8A%80%E5%B7%A7/">QQ技巧</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/andorid%E8%A7%A6%E6%91%B8%E4%B8%8E%E6%BB%91%E5%8A%A8/">andorid触摸与滑动</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android/">android</a><span class="category-list-count">128</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android-System/">android-System</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/androidUi%E5%B7%A9%E5%9B%BA%E7%AC%94%E8%AE%B0/">androidUi巩固笔记</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/androidtv%E5%BC%80%E5%8F%91/">androidtv开发</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E5%8A%A8%E7%94%BB/">android动画</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%8F%92%E4%BB%B6%E5%8C%96/">android插件化</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%9E%B6%E6%9E%84%E5%B8%88%E8%BF%9B%E9%98%B6/">android架构师进阶</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">android源码分析</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%9B%BE%E5%BD%A2%E7%BB%98%E5%88%B6/">android自定义与图形绘制</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/c/">c#</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/c-c-JNI-Ndk/">c-c---JNI-Ndk</a><span class="category-list-count">88</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/eclipse/">eclipse</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/git/">git</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/gradle/">gradle</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/ide%E6%8A%80%E5%B7%A7/">ide技巧</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java/">java</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kotlin-android/">kotlin--android</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kotlin-with-java/">kotlin-with-java</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/linux/">linux</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/mac-ios/">mac-ios</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/php/">php</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/python/">python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/shell-bat-lua%E8%84%9A%E6%9C%AC/">shell-bat-lua脚本</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/window/">window</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E4%B8%8A%E8%BD%A6/">上车</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%AC%E5%91%8A/">公告</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%89%8D%E7%AB%AF/">前端</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%8A%9E%E5%85%AC/">办公</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%90%8E%E7%AB%AF/">后端</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/">地球</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/">中国</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/%E6%B9%96%E5%8D%97/">湖南</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/%E6%B9%96%E5%8D%97/%E5%A8%84%E5%BA%95/">娄底</a><span class="category-list-count">1</span></li></ul></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9E%83%E5%9C%BE%E5%A0%86/">垃圾堆</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%A5%87%E6%B7%AB%E6%8A%80%E5%B7%A7/">奇淫技巧</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8A%80%E5%B7%A7/">小程序技巧</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%83%85%E8%BF%81QQ%E6%9C%BA%E5%99%A8%E4%BA%BA/">情迁QQ机器人</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%83%85%E8%BF%81%E8%BD%AF%E4%BB%B6/">情迁软件</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%89%93%E8%B5%8F/">打赏</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E5%AD%A6/">数学</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%97%A5%E8%AE%B0%E6%9C%AC/">日记本</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%87%E7%BC%96/">汇编</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B5%8B%E8%AF%95/">测试</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B5%8B%E8%AF%95%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8C%96/">测试与自动化</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6/">版本控制</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A1%AC%E4%BB%B6%E7%BB%B4%E4%BF%AE/">硬件维修</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A6%8F%E5%88%A9/">福利</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A7%91%E5%B9%BB/">科幻</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E6%95%B0%E5%AD%A6%E9%97%AE%E9%A2%98/">程序员的数学问题</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E6%9D%82%E9%A1%B9/">编程杂项</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BD%91%E7%AB%99%E5%BB%BA%E8%AE%BE/">网站建设</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BD%91%E7%BB%9C/">网络</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BE%8E%E5%A5%B3/">美女</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BF%BB%E8%AF%91%E8%A7%86%E9%A2%91%E6%95%99%E7%A8%8B/">翻译视频教程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%B0%E5%BF%86/">记忆</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%B7%A8%E5%B9%B3%E5%8F%B0app/">跨平台app</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%B7%AF%E7%94%B1%E5%99%A8/">路由器</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%80%86%E5%90%91/">逆向</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%80%86%E5%90%91%E4%B8%8E%E5%AE%89%E5%85%A8/">逆向与安全</a><span class="category-list-count">80</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/">随笔</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E8%AF%95%E6%94%BB%E5%85%8B/">面试攻克</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9F%B3%E8%A7%86%E9%A2%91%E5%A4%84%E7%90%86/">音视频处理</a><span class="category-list-count">7</span></li></ul></div></div><div class="widget"><div class="tagcloud"><h4>标签云</h4><a href="/tags/Android-bug%E5%BC%82%E5%B8%B8%E4%B8%8E%E8%A7%A3%E5%86%B3/" style="font-size: 18.7px;">Android-bug异常与解决</a> <a href="/tags/CDN/" style="font-size: 10px;">CDN</a> <a href="/tags/Git/" style="font-size: 10.43px;">Git</a> <a href="/tags/JAVA/" style="font-size: 10px;">JAVA</a> <a href="/tags/Lua/" style="font-size: 10px;">Lua</a> <a href="/tags/QQ%E6%8A%80%E5%B7%A7/" style="font-size: 10px;">QQ技巧</a> <a href="/tags/WEB/" style="font-size: 10.43px;">WEB</a> <a href="/tags/andorid%E8%A7%A6%E6%91%B8%E4%B8%8E%E6%BB%91%E5%8A%A8/" style="font-size: 13.91px;">andorid触摸与滑动</a> <a href="/tags/android/" style="font-size: 19.57px;">android</a> <a href="/tags/android-studio/" style="font-size: 10px;">android studio</a> <a href="/tags/android-System/" style="font-size: 16.09px;">android-System</a> <a href="/tags/androidUi%E5%B7%A9%E5%9B%BA%E7%AC%94%E8%AE%B0/" style="font-size: 11.74px;">androidUi巩固笔记</a> <a href="/tags/androidtv%E5%BC%80%E5%8F%91/" style="font-size: 10.43px;">androidtv开发</a> <a href="/tags/android%E5%8A%A8%E7%94%BB/" style="font-size: 10px;">android动画</a> <a href="/tags/android%E6%8F%92%E4%BB%B6%E5%8C%96/" style="font-size: 15.22px;">android插件化</a> <a href="/tags/android%E6%9E%B6%E6%9E%84%E5%B8%88%E8%BF%9B%E9%98%B6/" style="font-size: 10.43px;">android架构师进阶</a> <a href="/tags/android%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" style="font-size: 12.61px;">android源码分析</a> <a href="/tags/android%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%9B%BE%E5%BD%A2%E7%BB%98%E5%88%B6/" style="font-size: 16.52px;">android自定义与图形绘制</a> <a href="/tags/c/" style="font-size: 17.39px;">c#</a> <a href="/tags/c-c-JNI-Ndk/" style="font-size: 19.13px;">c-c---JNI-Ndk</a> <a href="/tags/consectetur/" style="font-size: 10px;">consectetur</a> <a href="/tags/eclipse/" style="font-size: 12.61px;">eclipse</a> <a href="/tags/git/" style="font-size: 13.48px;">git</a> <a href="/tags/gradle/" style="font-size: 16.96px;">gradle</a> <a href="/tags/ide%E6%8A%80%E5%B7%A7/" style="font-size: 16.52px;">ide技巧</a> <a href="/tags/java/" style="font-size: 15.65px;">java</a> <a href="/tags/kotlin-android/" style="font-size: 10.87px;">kotlin--android</a> <a href="/tags/kotlin-with-java/" style="font-size: 16.09px;">kotlin-with-java</a> <a href="/tags/linux/" style="font-size: 11.3px;">linux</a> <a href="/tags/mac-ios/" style="font-size: 17.83px;">mac-ios</a> <a href="/tags/markdown/" style="font-size: 10px;">markdown</a> <a href="/tags/php/" style="font-size: 13.91px;">php</a> <a href="/tags/python/" style="font-size: 16.09px;">python</a> <a href="/tags/shell-bat-lua%E8%84%9A%E6%9C%AC/" style="font-size: 12.61px;">shell-bat-lua脚本</a> <a href="/tags/window/" style="font-size: 14.35px;">window</a> <a href="/tags/xposed%E6%8F%92%E4%BB%B6/" style="font-size: 10px;">xposed插件</a> <a href="/tags/%E4%B8%83%E7%89%9B/" style="font-size: 10px;">七牛</a> <a href="/tags/%E4%B8%8A%E8%BD%A6/" style="font-size: 12.17px;">上车</a> <a href="/tags/%E4%BB%A3%E7%A0%81%E7%BC%96%E5%86%99/" style="font-size: 10px;">代码编写</a> <a href="/tags/%E5%85%8DRoot/" style="font-size: 10px;">免Root</a> <a href="/tags/%E5%85%AC%E5%91%8A/" style="font-size: 11.3px;">公告</a> <a href="/tags/%E5%88%86%E8%BA%AB%E5%A4%A7%E5%B8%88/" style="font-size: 10px;">分身大师</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 12.17px;">前端</a> <a href="/tags/%E5%8A%9E%E5%85%AC/" style="font-size: 10px;">办公</a> <a href="/tags/%E5%90%8E%E7%AB%AF/" style="font-size: 10px;">后端</a> <a href="/tags/%E5%9B%BE%E7%89%87/" style="font-size: 10px;">图片</a> <a href="/tags/%E5%9E%83%E5%9C%BE%E5%A0%86/" style="font-size: 15.22px;">垃圾堆</a> <a href="/tags/%E5%A5%87%E6%B7%AB%E6%8A%80%E5%B7%A7/" style="font-size: 14.35px;">奇淫技巧</a> <a href="/tags/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8A%80%E5%B7%A7/" style="font-size: 13.04px;">小程序技巧</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 10.87px;">性能优化</a> <a href="/tags/%E6%83%85%E8%BF%81QQ%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 10px;">情迁QQ机器人</a> <a href="/tags/%E6%83%85%E8%BF%81%E8%BD%AF%E4%BB%B6/" style="font-size: 18.26px;">情迁软件</a> <a href="/tags/%E6%89%93%E8%B5%8F/" style="font-size: 10px;">打赏</a> <a href="/tags/%E6%8F%92%E4%BB%B6/" style="font-size: 10px;">插件</a> <a href="/tags/%E6%95%B0%E5%AD%A6/" style="font-size: 12.17px;">数学</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" style="font-size: 11.74px;">数据库</a> <a href="/tags/%E6%97%A5%E8%AE%B0%E6%9C%AC/" style="font-size: 10.43px;">日记本</a> <a href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 10px;">机器人</a> <a href="/tags/%E6%B1%87%E7%BC%96/" style="font-size: 10px;">汇编</a> <a href="/tags/%E6%B5%8B%E8%AF%95%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8C%96/" style="font-size: 10.43px;">测试与自动化</a> <a href="/tags/%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6/" style="font-size: 10.43px;">版本控制</a> <a href="/tags/%E7%94%9F%E6%B4%BB/" style="font-size: 15.22px;">生活</a> <a href="/tags/%E7%A1%AC%E4%BB%B6%E7%BB%B4%E4%BF%AE/" style="font-size: 10px;">硬件维修</a> <a href="/tags/%E7%A6%8F%E5%88%A9/" style="font-size: 10.43px;">福利</a> <a href="/tags/%E7%A7%91%E5%B9%BB/" style="font-size: 10px;">科幻</a> <a href="/tags/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E6%95%B0%E5%AD%A6%E9%97%AE%E9%A2%98/" style="font-size: 13.91px;">程序员的数学问题</a> <a href="/tags/%E7%BC%96%E7%A8%8B%E6%9D%82%E9%A1%B9/" style="font-size: 13.91px;">编程杂项</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 11.3px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91%E8%A7%86%E9%A2%91%E6%95%99%E7%A8%8B/" style="font-size: 10px;">翻译视频教程</a> <a href="/tags/%E8%97%8F%E5%93%81/" style="font-size: 20px;">藏品</a> <a href="/tags/%E8%A7%86%E9%A2%91/" style="font-size: 10px;">视频</a> <a href="/tags/%E8%AE%B0%E5%BF%86/" style="font-size: 11.3px;">记忆</a> <a href="/tags/%E8%B7%A8%E5%B9%B3%E5%8F%B0app/" style="font-size: 14.78px;">跨平台app</a> <a href="/tags/%E8%B7%AF%E7%94%B1%E5%99%A8/" style="font-size: 10.87px;">路由器</a> <a href="/tags/%E9%80%86%E5%90%91/" style="font-size: 10px;">逆向</a> <a href="/tags/%E9%80%86%E5%90%91%E4%B8%8E%E5%AE%89%E5%85%A8/" style="font-size: 18.7px;">逆向与安全</a> <a href="/tags/%E9%93%BE%E6%8E%A5/" style="font-size: 10.43px;">链接</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 11.74px;">随笔</a> <a href="/tags/%E9%9D%A2%E8%AF%95%E6%94%BB%E5%85%8B/" style="font-size: 10.43px;">面试攻克</a> <a href="/tags/%E9%9F%B3%E8%A7%86%E9%A2%91%E5%A4%84%E7%90%86/" style="font-size: 12.61px;">音视频处理</a></div></div><div class="widget"><div class="recent"><h4>最近文章</h4><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/06/30/soft_use_status/">soft_use_status</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/06/30/hello-world%E4%B8%8Ehexo%E7%9A%84%E5%BC%80%E5%A7%8B/">Hello World</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/03/05/%E3%80%90%E5%8E%9F%E5%88%9B%E3%80%91flutter%E4%B9%8B%E5%8F%91%E5%B8%83%E6%8F%92%E4%BB%B6%E5%8C%85%E5%88%B0pub-dev%E7%A6%BB%E7%BA%BF%E5%9C%A8%E7%BA%BF%E4%B8%A4%E5%A5%97%E5%A4%A7%E6%B3%95/">【原创】flutter之发布插件包到pubdev离线在线两套大法</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/31/markdown-support%E6%8F%92%E4%BB%B6%E7%9A%84%E5%AE%89%E8%A3%85%E6%96%B9%E6%B3%95/">markdownsupport插件的安装方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/16/%5B%E5%8E%9F%E5%88%9B%5D%E7%94%B5%E8%84%91vpn%E5%85%B1%E4%BA%AB%E6%88%90wifi%E7%BD%91%E7%BB%9C%E8%AE%A9%E6%89%80%E6%9C%89%E7%94%B5%E8%84%91%E6%89%8B%E6%9C%BA%E8%AE%BE%E5%A4%87%E4%B9%9F%E8%83%BD%E8%AE%BF%E9%97%AE%E5%85%B6%E5%AE%83%E5%8C%BA%E5%9F%9F%E5%86%85%E7%BD%91/">原创电脑vpn共享成wifi网络让所有电脑手机设备也能访问其它区域内网</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/06/%E5%85%B3%E4%BA%8E%E6%9F%90bilibli%E4%B8%8B%E8%BD%BD%E5%99%A8%E7%BC%BA%E9%99%B7%E4%B8%8B%E8%BD%BD%E7%9A%84%E6%96%87%E4%BB%B6%E5%9C%A8%E6%96%87%E4%BB%B6%E5%A4%B9%E5%AD%90%E7%9B%AE%E5%BD%95%E4%BF%AE%E6%AD%A3%E6%96%B9%E6%B3%95/">关于某bilibli下载器缺陷下载的文件在文件夹子目录修正方法</a></li></ul></div></div><div class="widget"><div id="arAnchorBar"></div></div></div></section></div><div class="right-menu"></div><div class="modal search-modal"><div class="input-field"><input type="text" id="search_input"><label for="search-input">搜索</label></div><div id="search_result" class="search-result"></div></div><div class="blog-overlay"></div><footer class="row"><div class="footer-con"><div class="paginator"><a href="/2018/03/20/android%E8%87%AA%E5%B8%A6ProgressBar%E5%9C%86%E5%BD%A2%E8%BF%9B%E5%BA%A6%E6%9D%A1%E4%BF%AE%E6%94%B9%E9%A2%9C%E8%89%B2%E7%9A%84%E6%8A%80%E5%B7%A7%E6%96%B9%E6%B3%95%E6%97%A0bug%E6%8E%A2%E7%B4%A2/" class="prev">PREV</a><a href="/2018/03/20/%E8%81%8A%E4%B8%80%E8%81%8A%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7%E9%97%AE%E9%A2%98-qusnap_background_color)'-not-found-/" class="next">NEXT</a></div><!--PC和WAP自适应版--><div id="SOHUCS" sid="2018/03/20/android继承RadioGroup实现添加小红点-旋转drawableTop原来的配方原来的味道/"> </div><script>(function() {
+    var appid = 'cytVgXm93'; 
+    var conf = 'e46b9c0a4ede5c70e062020c1d3651e1';
+    var width = window.innerWidth || document.documentElement.clientWidth; 
+    if (width < 960) { 
+    window.document.write('<script id="changyan_mobile_js" charset="utf-8" type="text/javascript" src="https://changyan.sohu.com/upload/mobile/wap-js/changyan_mobile.js?client_id=' + appid + '&conf=' + conf + '"><\/script>'); } else { var loadJs=function(d,a){var c=document.getElementsByTagName("head")[0]||document.head||document.documentElement;var b=document.createElement("script");b.setAttribute("type","text/javascript");b.setAttribute("charset","UTF-8");b.setAttribute("src",d);if(typeof a==="function"){if(window.attachEvent){b.onreadystatechange=function(){var e=b.readyState;if(e==="loaded"||e==="complete"){b.onreadystatechange=null;a()}}}else{b.onload=a}}c.appendChild(b)};loadJs("https://changyan.sohu.com/upload/changyan.js",function(){window.changyan.api.config({appid:appid,conf:conf})}); } })();</script><div class="copyright"><p>© 2015 - 2022 <a target="_blank">情随事迁</a>, 微博 <a href="https://weibo.com/qssq666" target="_blank">qssq666</a> <br>  <a href="https://space.bilibili.com/101043764?spm_id_from=333.1007.0.0" target="_blank">bilibli</a>  <a href="https://www.jianshu.com/u/9b0768e66d01" target="_blank">简书</a></p><p>总计访问量 <i data-hk-site="-"></i></p></div><div class="totop"><i></i></div></div></footer>
+<script async src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src="http://apps.bdimg.com/libs/jquery/1.8.2/jquery.min.js"></script><script src="/scripts/av-min-1.5.0.js"></script><script src="/scripts/hit-kounter-lc-0.3.0.js"></script><script src="/scripts/arAnchor.js"></script><script src="/scripts/main.js"></script></body></html>

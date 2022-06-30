@@ -1,0 +1,213 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="baidu-site-verification" content=""><meta name="google-site-verification" content="UKlpQSB6IlVlxjxgprQbTNRUiLE1BnpIV5zeQ_MYkks"><title> 原创andorid最方便定制的新手引导浮层新手引导指引页半透明挖空制作与开源github以及分享实现思路 · 情迁博客</title><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="原创andorid最方便定制的新手引导浮层新手引导指引页半透明挖空制作与开源github以及分享实现思路 - 情随事迁"><meta name="keywords"><meta name="author" content="情随事迁"><meta name="referrer" content="no-referrer"><link rel="short icon" href="/images/favicon.ico"><link rel="stylesheet" href="/css/bubuzou.css"><link rel="search" type="application/opensearchdescription+xml" href="https://lozn.top/atom.xml" title="情迁博客"><meta name="generator" content="Hexo 5.4.1"></head><body><header><div class="header row"> <a href="/" class="logo-link"><img src="/images/logo.png"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/archives/" target="_self" data-hover="归档" class="nav-list-link">归档</a></li><li class="nav-list-item"><a href="https://godhand.lozn.top" target="_blank" data-hover="神之手" class="nav-list-link">神之手</a></li><li class="nav-list-item"><a href="https://robot.lozn.top" target="_blank" data-hover="机器人" class="nav-list-link">机器人</a></li><li class="nav-list-item"><a href="/categories/情迁软件/" target="_self" data-hover="情迁" class="nav-list-link">情迁</a></li><li class="nav-list-item"><a href="https://www.jianshu.com/u/9b0768e66d01" target="_blank" data-hover="简书" class="nav-list-link">简书</a></li><li class="nav-list-item"><a href="/update/" target="_self" data-hover="下载" class="nav-list-link">下载</a></li><li class="nav-list-item"><a href="/about/" target="_self" data-hover="关于" class="nav-list-link">关于</a></li></ul><div class="search"><a id="search_btn" href="#search"></a></div></div></header><div class="row scroll-con"><section class="container"><!-- for archive page --><div id="postAr" class="post"><article class="post-block"><h1 class="post-title">原创andorid最方便定制的新手引导浮层新手引导指引页半透明挖空制作与开源github以及分享实现思路</h1><div class="post-info">2018-04-30<p class="visit"><i data-hk-page="current">Loading</i><span>次访问</span></p></div><div class="post-content"><p>简书链接:<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/87133c89c5fa">原创andorid最方便定制的新手引导浮层新手引导指引页半透明挖空制作与开源github以及分享实现思路</a><br>文章字数：705,阅读全文大约需要2分钟<br>首先文章非常简单，代码非常精简，也就是说这里的技术只是打造一个非常方便扩展的view,剩下的事情没有学习成本，只需要跟平常开发一样写布局摆放到指定位置就行，越是精简越是非常容易扩展，整个引导浮层就镂空区域没法使用现成view,或者xml写出来的。</p>
+<h3 id="设计思路和扩展原理"><a href="#设计思路和扩展原理" class="headerlink" title="设计思路和扩展原理"></a>设计思路和扩展原理</h3><p>1、引导箭头是自己摆放，方便用户定制，自己用布局嵌套就好<br>2、方便用户随意摆放到任何位置,如对话框、顶层<code>decorview</code>或者放置到<code>fragment</code>里面于是我打算设计成一个view,而不是一个封装死的框架.而且这个view只处理镂空形状问题.<br>3、镂空形状的设计要方便扩展，我采取接口的方式传递画板和画笔 默认实现了圆形和矩形，用户可以轻松实现其他形状定制。</p>
+<h3 id="镂空实现原理"><a href="#镂空实现原理" class="headerlink" title="镂空实现原理"></a>镂空实现原理</h3><p>超级简单的,我之前看了别人那个就头疼，于是自己着手写了一个镂空的，采用的绘制模式是&#96;</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">![image.png](https://upload-images.jianshu.io/upload_images/2815884-0a3ad00c096942e6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/600)</span><br><span class="line"></span><br><span class="line">首先要说明白一点就是```det```表示底层图层, ```src```表示顶层的图层</span><br><span class="line">从图中得知```,dstout```模式 就是把```src```盖到```dstout```的右下角，导致右下角消失不见了。</span><br><span class="line"></span><br><span class="line">所以我这里是绘制了一个矩形半透明 然后上层 绘制一个要镂空的任意形状， 颜色随便，我这里保持不变。</span><br><span class="line"></span><br><span class="line">开源完整地址</span><br><span class="line"></span><br><span class="line">https://github.com/qssq/HollowOutView</span><br><span class="line">导入依赖</span><br></pre></td></tr></table></figure>
+<p>compile ‘cn.qssq666:hollowoutview:0.1’</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">使用方法</span><br></pre></td></tr></table></figure>
+<p> HollowOutView hollowOutView &#x3D; (HollowOutView) findViewById(R.id.hollowoutview);<br>        &#x2F;&#x2F;在中心点100的区域绘制一个50px大小的圆圈 透明区域<br>        HollowOutView.CiceleHollowedShapeInfo circle&#x3D;new HollowOutView.CiceleHollowedShapeInfo().setCx(100).setCy(100).setRadius(100);<br>        hollowOutView.addGuideDrawInfo(circle);<br>        &#x2F;&#x2F;添加一个矩形 镂空透明区域 所有单位都是px,自己转换<br>        HollowOutView.RectHollowedShapeInfo rect&#x3D;new HollowOutView.RectHollowedShapeInfo().setHeight(100).setWidth(90).setLeft(400).setTop(800);<br>        hollowOutView.addGuideDrawInfo(rect);<br>        hollowOutView.applyChanage();</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">非完整代码 ```HollowOutView ```镂空view代码如下.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>&#x2F;**</p>
+<ul>
+<li>Created by qssq on 2018&#x2F;4&#x2F;29 <a href="mailto:&#x71;&#115;&#x73;&#x71;&#x36;&#x36;&#54;&#64;&#102;&#x6f;&#120;&#x6d;&#97;&#105;&#108;&#x2e;&#99;&#x6f;&#109;">&#x71;&#115;&#x73;&#x71;&#x36;&#x36;&#54;&#64;&#102;&#x6f;&#120;&#x6d;&#97;&#105;&#108;&#x2e;&#99;&#x6f;&#109;</a></li>
+</ul>
+<p> *&#x2F;<br>public class HollowedOutView extends View {</p>
+<pre><code>public Paint getPaint() &#123;
+    return paint;
+&#125;
+
+private Paint paint;
+
+public HollowedOutView(Context context) &#123;
+    super(context);
+    init(context);
+&#125;
+
+public HollowedOutView(Context context, @Nullable AttributeSet attrs) &#123;
+    super(context, attrs);
+    init(context);
+&#125;
+
+protected void init(Context context) &#123;
+
+
+    paint = new Paint();
+    paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+    paint.setColor(Color.parseColor(&quot;#7f000000&quot;));//百分之50
+    paint.setColor(Color.parseColor(&quot;#32000000&quot;));//百分之20
+    paint.setColor(Color.parseColor(&quot;#c8000000&quot;));//百分之80
+    setLayerType(LAYER_TYPE_SOFTWARE, null);//关闭硬件加速
+
+&#125;
+
+public HollowedOutView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) &#123;
+    super(context, attrs, defStyleAttr);
+    init(context);
+&#125;
+
+@Override
+protected void onDraw(Canvas canvas) &#123;
+    super.onDraw(canvas);
+
+    canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
+
+    Xfermode mXfermode = new PorterDuffXfermode(PorterDuff.Mode.DST_OUT);//从绘制模式图片得知 这种模式会导致挖空的区域消失
+    paint.setXfermode(mXfermode);
+    for (int i = 0; i &lt; infos.size(); i++) &#123;
+
+        HollowedOutShapeInfoI guideDrawInfo = infos.get(i);
+        guideDrawInfo.executeDraw(canvas, paint);
+
+    &#125;
+    paint.setXfermode(null);
+
+
+&#125;
+
+protected List&lt;HollowedOutShapeInfoI&gt; infos = new ArrayList&lt;&gt;();
+
+public void addGuideDrawInfo(HollowedOutShapeInfoI info) &#123;
+
+&#125;
+
+public void addGuideDrawInfos(List&lt;HollowedOutShapeInfoI&gt; infos) &#123;
+    this.infos.addAll(infos);
+
+&#125;
+
+public void clearGuideDrawInfo() &#123;
+
+    infos.clear();
+&#125;
+
+/**
+ * 镂空形状接口 可用户自定义
+ */
+public interface HollowedOutShapeInfoI &#123;
+    /**
+     * 要挖空的形状
+     *
+     * @param canvas
+     * @param paint
+     */
+    void executeDraw(Canvas canvas, Paint paint);
+&#125;
+
+public static class RectHollowedShapeInfo implements HollowedOutShapeInfoI &#123;
+
+
+    public int getLeft() &#123;
+        return left;
+    &#125;
+
+    public void setLeft(int left) &#123;
+        this.left = left;
+    &#125;
+
+    public int getTop() &#123;
+        return top;
+    &#125;
+
+    public void setTop(int top) &#123;
+        this.top = top;
+    &#125;
+
+    public int getWidth() &#123;
+        return width;
+    &#125;
+
+    public void setWidth(int width) &#123;
+        this.width = width;
+    &#125;
+
+    public int getHeight() &#123;
+        return height;
+    &#125;
+
+    public void setHeight(int height) &#123;
+        this.height = height;
+    &#125;
+
+    int left;
+    int top;
+    int width;
+    int height;
+
+    @Override
+    public void executeDraw(Canvas canvas, Paint paint) &#123;
+        canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
+    &#125;
+
+&#125;
+
+//默认实现的镂空圆形图标
+
+
+public static class CiceleHollowedShapeInfo implements HollowedOutShapeInfoI &#123;
+
+    public int getCx() &#123;
+        return cx;
+    &#125;
+
+    /**
+     * 要绘制的圆圈的中心点x坐标
+     *
+     * @param cx
+     */
+    public void setCx(int cx) &#123;
+        this.cx = cx;
+    &#125;
+
+    /**
+     * 要绘制的中心点y坐标
+     *
+     * @return
+     */
+    public int getCy() &#123;
+        return cy;
+    &#125;
+
+    public void setCy(int cy) &#123;
+        this.cy = cy;
+    &#125;
+
+    public int getRadius() &#123;
+        return radius;
+    &#125;
+
+    public void setRadius(int radius) &#123;
+        this.radius = radius;
+    &#125;
+
+    int cx;
+    int cy;
+    /**
+     * 圆角半径
+     */
+    int radius;
+
+    @Override
+    public void executeDraw(Canvas canvas, Paint paint) &#123;
+
+
+        canvas.drawCircle(
+                cx,
+                cy,
+                radius, paint);
+    &#125;
+    /**
+     * 要挖空的形状
+     *
+     * @param canvas
+     */
+&#125;
+</code></pre>
+<p>}</p>
+<pre><code>
+</code></pre>
+</div></article></div><div class="right-container"><div class="widget"><div class="category"><h4>分类归档</h4><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Android-bug%E5%BC%82%E5%B8%B8%E4%B8%8E%E8%A7%A3%E5%86%B3/">Android-bug异常与解决</a><span class="category-list-count">80</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Blog/">Blog</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Photo/">Photo</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/QQ%E6%8A%80%E5%B7%A7/">QQ技巧</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/andorid%E8%A7%A6%E6%91%B8%E4%B8%8E%E6%BB%91%E5%8A%A8/">andorid触摸与滑动</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android/">android</a><span class="category-list-count">128</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android-System/">android-System</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/androidUi%E5%B7%A9%E5%9B%BA%E7%AC%94%E8%AE%B0/">androidUi巩固笔记</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/androidtv%E5%BC%80%E5%8F%91/">androidtv开发</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E5%8A%A8%E7%94%BB/">android动画</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%8F%92%E4%BB%B6%E5%8C%96/">android插件化</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%9E%B6%E6%9E%84%E5%B8%88%E8%BF%9B%E9%98%B6/">android架构师进阶</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">android源码分析</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%9B%BE%E5%BD%A2%E7%BB%98%E5%88%B6/">android自定义与图形绘制</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/c/">c#</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/c-c-JNI-Ndk/">c-c---JNI-Ndk</a><span class="category-list-count">88</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/eclipse/">eclipse</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/git/">git</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/gradle/">gradle</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/ide%E6%8A%80%E5%B7%A7/">ide技巧</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java/">java</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kotlin-android/">kotlin--android</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kotlin-with-java/">kotlin-with-java</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/linux/">linux</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/mac-ios/">mac-ios</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/php/">php</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/python/">python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/shell-bat-lua%E8%84%9A%E6%9C%AC/">shell-bat-lua脚本</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/window/">window</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E4%B8%8A%E8%BD%A6/">上车</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%AC%E5%91%8A/">公告</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%89%8D%E7%AB%AF/">前端</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%8A%9E%E5%85%AC/">办公</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%90%8E%E7%AB%AF/">后端</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/">地球</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/">中国</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/%E6%B9%96%E5%8D%97/">湖南</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/%E6%B9%96%E5%8D%97/%E5%A8%84%E5%BA%95/">娄底</a><span class="category-list-count">1</span></li></ul></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9E%83%E5%9C%BE%E5%A0%86/">垃圾堆</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%A5%87%E6%B7%AB%E6%8A%80%E5%B7%A7/">奇淫技巧</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8A%80%E5%B7%A7/">小程序技巧</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%83%85%E8%BF%81QQ%E6%9C%BA%E5%99%A8%E4%BA%BA/">情迁QQ机器人</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%83%85%E8%BF%81%E8%BD%AF%E4%BB%B6/">情迁软件</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%89%93%E8%B5%8F/">打赏</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E5%AD%A6/">数学</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%97%A5%E8%AE%B0%E6%9C%AC/">日记本</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%87%E7%BC%96/">汇编</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B5%8B%E8%AF%95/">测试</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B5%8B%E8%AF%95%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8C%96/">测试与自动化</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6/">版本控制</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A1%AC%E4%BB%B6%E7%BB%B4%E4%BF%AE/">硬件维修</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A6%8F%E5%88%A9/">福利</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A7%91%E5%B9%BB/">科幻</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E6%95%B0%E5%AD%A6%E9%97%AE%E9%A2%98/">程序员的数学问题</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E6%9D%82%E9%A1%B9/">编程杂项</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BD%91%E7%AB%99%E5%BB%BA%E8%AE%BE/">网站建设</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BD%91%E7%BB%9C/">网络</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BE%8E%E5%A5%B3/">美女</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BF%BB%E8%AF%91%E8%A7%86%E9%A2%91%E6%95%99%E7%A8%8B/">翻译视频教程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%B0%E5%BF%86/">记忆</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%B7%A8%E5%B9%B3%E5%8F%B0app/">跨平台app</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%B7%AF%E7%94%B1%E5%99%A8/">路由器</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%80%86%E5%90%91/">逆向</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%80%86%E5%90%91%E4%B8%8E%E5%AE%89%E5%85%A8/">逆向与安全</a><span class="category-list-count">80</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/">随笔</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E8%AF%95%E6%94%BB%E5%85%8B/">面试攻克</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9F%B3%E8%A7%86%E9%A2%91%E5%A4%84%E7%90%86/">音视频处理</a><span class="category-list-count">7</span></li></ul></div></div><div class="widget"><div class="tagcloud"><h4>标签云</h4><a href="/tags/Android-bug%E5%BC%82%E5%B8%B8%E4%B8%8E%E8%A7%A3%E5%86%B3/" style="font-size: 18.7px;">Android-bug异常与解决</a> <a href="/tags/CDN/" style="font-size: 10px;">CDN</a> <a href="/tags/Git/" style="font-size: 10.43px;">Git</a> <a href="/tags/JAVA/" style="font-size: 10px;">JAVA</a> <a href="/tags/Lua/" style="font-size: 10px;">Lua</a> <a href="/tags/QQ%E6%8A%80%E5%B7%A7/" style="font-size: 10px;">QQ技巧</a> <a href="/tags/WEB/" style="font-size: 10.43px;">WEB</a> <a href="/tags/andorid%E8%A7%A6%E6%91%B8%E4%B8%8E%E6%BB%91%E5%8A%A8/" style="font-size: 13.91px;">andorid触摸与滑动</a> <a href="/tags/android/" style="font-size: 19.57px;">android</a> <a href="/tags/android-studio/" style="font-size: 10px;">android studio</a> <a href="/tags/android-System/" style="font-size: 16.09px;">android-System</a> <a href="/tags/androidUi%E5%B7%A9%E5%9B%BA%E7%AC%94%E8%AE%B0/" style="font-size: 11.74px;">androidUi巩固笔记</a> <a href="/tags/androidtv%E5%BC%80%E5%8F%91/" style="font-size: 10.43px;">androidtv开发</a> <a href="/tags/android%E5%8A%A8%E7%94%BB/" style="font-size: 10px;">android动画</a> <a href="/tags/android%E6%8F%92%E4%BB%B6%E5%8C%96/" style="font-size: 15.22px;">android插件化</a> <a href="/tags/android%E6%9E%B6%E6%9E%84%E5%B8%88%E8%BF%9B%E9%98%B6/" style="font-size: 10.43px;">android架构师进阶</a> <a href="/tags/android%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" style="font-size: 12.61px;">android源码分析</a> <a href="/tags/android%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%9B%BE%E5%BD%A2%E7%BB%98%E5%88%B6/" style="font-size: 16.52px;">android自定义与图形绘制</a> <a href="/tags/c/" style="font-size: 17.39px;">c#</a> <a href="/tags/c-c-JNI-Ndk/" style="font-size: 19.13px;">c-c---JNI-Ndk</a> <a href="/tags/consectetur/" style="font-size: 10px;">consectetur</a> <a href="/tags/eclipse/" style="font-size: 12.61px;">eclipse</a> <a href="/tags/git/" style="font-size: 13.48px;">git</a> <a href="/tags/gradle/" style="font-size: 16.96px;">gradle</a> <a href="/tags/ide%E6%8A%80%E5%B7%A7/" style="font-size: 16.52px;">ide技巧</a> <a href="/tags/java/" style="font-size: 15.65px;">java</a> <a href="/tags/kotlin-android/" style="font-size: 10.87px;">kotlin--android</a> <a href="/tags/kotlin-with-java/" style="font-size: 16.09px;">kotlin-with-java</a> <a href="/tags/linux/" style="font-size: 11.3px;">linux</a> <a href="/tags/mac-ios/" style="font-size: 17.83px;">mac-ios</a> <a href="/tags/markdown/" style="font-size: 10px;">markdown</a> <a href="/tags/php/" style="font-size: 13.91px;">php</a> <a href="/tags/python/" style="font-size: 16.09px;">python</a> <a href="/tags/shell-bat-lua%E8%84%9A%E6%9C%AC/" style="font-size: 12.61px;">shell-bat-lua脚本</a> <a href="/tags/window/" style="font-size: 14.35px;">window</a> <a href="/tags/xposed%E6%8F%92%E4%BB%B6/" style="font-size: 10px;">xposed插件</a> <a href="/tags/%E4%B8%83%E7%89%9B/" style="font-size: 10px;">七牛</a> <a href="/tags/%E4%B8%8A%E8%BD%A6/" style="font-size: 12.17px;">上车</a> <a href="/tags/%E4%BB%A3%E7%A0%81%E7%BC%96%E5%86%99/" style="font-size: 10px;">代码编写</a> <a href="/tags/%E5%85%8DRoot/" style="font-size: 10px;">免Root</a> <a href="/tags/%E5%85%AC%E5%91%8A/" style="font-size: 11.3px;">公告</a> <a href="/tags/%E5%88%86%E8%BA%AB%E5%A4%A7%E5%B8%88/" style="font-size: 10px;">分身大师</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 12.17px;">前端</a> <a href="/tags/%E5%8A%9E%E5%85%AC/" style="font-size: 10px;">办公</a> <a href="/tags/%E5%90%8E%E7%AB%AF/" style="font-size: 10px;">后端</a> <a href="/tags/%E5%9B%BE%E7%89%87/" style="font-size: 10px;">图片</a> <a href="/tags/%E5%9E%83%E5%9C%BE%E5%A0%86/" style="font-size: 15.22px;">垃圾堆</a> <a href="/tags/%E5%A5%87%E6%B7%AB%E6%8A%80%E5%B7%A7/" style="font-size: 14.35px;">奇淫技巧</a> <a href="/tags/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8A%80%E5%B7%A7/" style="font-size: 13.04px;">小程序技巧</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 10.87px;">性能优化</a> <a href="/tags/%E6%83%85%E8%BF%81QQ%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 10px;">情迁QQ机器人</a> <a href="/tags/%E6%83%85%E8%BF%81%E8%BD%AF%E4%BB%B6/" style="font-size: 18.26px;">情迁软件</a> <a href="/tags/%E6%89%93%E8%B5%8F/" style="font-size: 10px;">打赏</a> <a href="/tags/%E6%8F%92%E4%BB%B6/" style="font-size: 10px;">插件</a> <a href="/tags/%E6%95%B0%E5%AD%A6/" style="font-size: 12.17px;">数学</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" style="font-size: 11.74px;">数据库</a> <a href="/tags/%E6%97%A5%E8%AE%B0%E6%9C%AC/" style="font-size: 10.43px;">日记本</a> <a href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 10px;">机器人</a> <a href="/tags/%E6%B1%87%E7%BC%96/" style="font-size: 10px;">汇编</a> <a href="/tags/%E6%B5%8B%E8%AF%95%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8C%96/" style="font-size: 10.43px;">测试与自动化</a> <a href="/tags/%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6/" style="font-size: 10.43px;">版本控制</a> <a href="/tags/%E7%94%9F%E6%B4%BB/" style="font-size: 15.22px;">生活</a> <a href="/tags/%E7%A1%AC%E4%BB%B6%E7%BB%B4%E4%BF%AE/" style="font-size: 10px;">硬件维修</a> <a href="/tags/%E7%A6%8F%E5%88%A9/" style="font-size: 10.43px;">福利</a> <a href="/tags/%E7%A7%91%E5%B9%BB/" style="font-size: 10px;">科幻</a> <a href="/tags/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E6%95%B0%E5%AD%A6%E9%97%AE%E9%A2%98/" style="font-size: 13.91px;">程序员的数学问题</a> <a href="/tags/%E7%BC%96%E7%A8%8B%E6%9D%82%E9%A1%B9/" style="font-size: 13.91px;">编程杂项</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 11.3px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91%E8%A7%86%E9%A2%91%E6%95%99%E7%A8%8B/" style="font-size: 10px;">翻译视频教程</a> <a href="/tags/%E8%97%8F%E5%93%81/" style="font-size: 20px;">藏品</a> <a href="/tags/%E8%A7%86%E9%A2%91/" style="font-size: 10px;">视频</a> <a href="/tags/%E8%AE%B0%E5%BF%86/" style="font-size: 11.3px;">记忆</a> <a href="/tags/%E8%B7%A8%E5%B9%B3%E5%8F%B0app/" style="font-size: 14.78px;">跨平台app</a> <a href="/tags/%E8%B7%AF%E7%94%B1%E5%99%A8/" style="font-size: 10.87px;">路由器</a> <a href="/tags/%E9%80%86%E5%90%91/" style="font-size: 10px;">逆向</a> <a href="/tags/%E9%80%86%E5%90%91%E4%B8%8E%E5%AE%89%E5%85%A8/" style="font-size: 18.7px;">逆向与安全</a> <a href="/tags/%E9%93%BE%E6%8E%A5/" style="font-size: 10.43px;">链接</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 11.74px;">随笔</a> <a href="/tags/%E9%9D%A2%E8%AF%95%E6%94%BB%E5%85%8B/" style="font-size: 10.43px;">面试攻克</a> <a href="/tags/%E9%9F%B3%E8%A7%86%E9%A2%91%E5%A4%84%E7%90%86/" style="font-size: 12.61px;">音视频处理</a></div></div><div class="widget"><div class="recent"><h4>最近文章</h4><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/06/30/soft_use_status/">soft_use_status</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/06/30/hello-world%E4%B8%8Ehexo%E7%9A%84%E5%BC%80%E5%A7%8B/">Hello World</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/03/05/%E3%80%90%E5%8E%9F%E5%88%9B%E3%80%91flutter%E4%B9%8B%E5%8F%91%E5%B8%83%E6%8F%92%E4%BB%B6%E5%8C%85%E5%88%B0pub-dev%E7%A6%BB%E7%BA%BF%E5%9C%A8%E7%BA%BF%E4%B8%A4%E5%A5%97%E5%A4%A7%E6%B3%95/">【原创】flutter之发布插件包到pubdev离线在线两套大法</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/31/markdown-support%E6%8F%92%E4%BB%B6%E7%9A%84%E5%AE%89%E8%A3%85%E6%96%B9%E6%B3%95/">markdownsupport插件的安装方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/16/%5B%E5%8E%9F%E5%88%9B%5D%E7%94%B5%E8%84%91vpn%E5%85%B1%E4%BA%AB%E6%88%90wifi%E7%BD%91%E7%BB%9C%E8%AE%A9%E6%89%80%E6%9C%89%E7%94%B5%E8%84%91%E6%89%8B%E6%9C%BA%E8%AE%BE%E5%A4%87%E4%B9%9F%E8%83%BD%E8%AE%BF%E9%97%AE%E5%85%B6%E5%AE%83%E5%8C%BA%E5%9F%9F%E5%86%85%E7%BD%91/">原创电脑vpn共享成wifi网络让所有电脑手机设备也能访问其它区域内网</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/06/%E5%85%B3%E4%BA%8E%E6%9F%90bilibli%E4%B8%8B%E8%BD%BD%E5%99%A8%E7%BC%BA%E9%99%B7%E4%B8%8B%E8%BD%BD%E7%9A%84%E6%96%87%E4%BB%B6%E5%9C%A8%E6%96%87%E4%BB%B6%E5%A4%B9%E5%AD%90%E7%9B%AE%E5%BD%95%E4%BF%AE%E6%AD%A3%E6%96%B9%E6%B3%95/">关于某bilibli下载器缺陷下载的文件在文件夹子目录修正方法</a></li></ul></div></div><div class="widget"><div id="arAnchorBar"></div></div></div></section></div><div class="right-menu"></div><div class="modal search-modal"><div class="input-field"><input type="text" id="search_input"><label for="search-input">搜索</label></div><div id="search_result" class="search-result"></div></div><div class="blog-overlay"></div><footer class="row"><div class="footer-con"><div class="paginator"><a href="/2018/04/30/AsyncTask%E6%BA%90%E7%A0%81%E5%8E%9F%E7%90%86%E7%AE%80%E8%A6%81%E5%88%86%E6%9E%90%E4%B8%8E%E6%80%BB%E7%BB%93/" class="prev">PREV</a><a href="/2018/04/29/%5B%E7%BB%9D%E9%80%BC%E5%8E%9F%E5%88%9B%E7%9B%B8%E8%A7%81%E6%81%A8%E6%99%9A%5Dgradle%E6%8A%80%E5%B7%A7%E4%B9%8Bmac-window-%E4%BE%BF%E6%8D%B7%E5%85%A8%E5%B1%80%E7%AD%BE%E5%90%8D%E6%96%87%E4%BB%B6%E8%AE%BE%E7%BD%AE%E6%8A%80%E5%B7%A7%E8%AE%A9%E4%BD%A0%E8%B7%A8%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%B9%B3%E5%8F%B0%E5%BC%80%E5%8F%91%E6%97%A0%E9%9C%80%E6%94%B9%E7%AD%BE%E5%90%8D%E9%85%8D%E7%BD%AE/" class="next">NEXT</a></div><!--PC和WAP自适应版--><div id="SOHUCS" sid="2018/04/30/[原创]andorid最方便定制的新手引导浮层新手引导指引页半透明挖空制作与开源github以及分享实现思路/"> </div><script>(function() {
+    var appid = 'cytVgXm93'; 
+    var conf = 'e46b9c0a4ede5c70e062020c1d3651e1';
+    var width = window.innerWidth || document.documentElement.clientWidth; 
+    if (width < 960) { 
+    window.document.write('<script id="changyan_mobile_js" charset="utf-8" type="text/javascript" src="https://changyan.sohu.com/upload/mobile/wap-js/changyan_mobile.js?client_id=' + appid + '&conf=' + conf + '"><\/script>'); } else { var loadJs=function(d,a){var c=document.getElementsByTagName("head")[0]||document.head||document.documentElement;var b=document.createElement("script");b.setAttribute("type","text/javascript");b.setAttribute("charset","UTF-8");b.setAttribute("src",d);if(typeof a==="function"){if(window.attachEvent){b.onreadystatechange=function(){var e=b.readyState;if(e==="loaded"||e==="complete"){b.onreadystatechange=null;a()}}}else{b.onload=a}}c.appendChild(b)};loadJs("https://changyan.sohu.com/upload/changyan.js",function(){window.changyan.api.config({appid:appid,conf:conf})}); } })();</script><div class="copyright"><p>© 2015 - 2022 <a target="_blank">情随事迁</a>, 微博 <a href="https://weibo.com/qssq666" target="_blank">qssq666</a> <br>  <a href="https://space.bilibili.com/101043764?spm_id_from=333.1007.0.0" target="_blank">bilibli</a>  <a href="https://www.jianshu.com/u/9b0768e66d01" target="_blank">简书</a></p><p>总计访问量 <i data-hk-site="-"></i></p></div><div class="totop"><i></i></div></div></footer>
+<script async src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src="http://apps.bdimg.com/libs/jquery/1.8.2/jquery.min.js"></script><script src="/scripts/av-min-1.5.0.js"></script><script src="/scripts/hit-kounter-lc-0.3.0.js"></script><script src="/scripts/arAnchor.js"></script><script src="/scripts/main.js"></script></body></html>
