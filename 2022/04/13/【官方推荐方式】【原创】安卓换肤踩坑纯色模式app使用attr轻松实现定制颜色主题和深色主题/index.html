@@ -1,0 +1,949 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="baidu-site-verification" content=""><meta name="google-site-verification" content="UKlpQSB6IlVlxjxgprQbTNRUiLE1BnpIV5zeQ_MYkks"><title> 【官方推荐方式】【原创】安卓换肤踩坑纯色模式app使用attr轻松实现定制颜色主题和深色主题 · 情迁博客</title><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="【官方推荐方式】【原创】安卓换肤踩坑纯色模式app使用attr轻松实现定制颜色主题和深色主题 - 情随事迁"><meta name="keywords"><meta name="author" content="情随事迁"><meta name="referrer" content="no-referrer"><link rel="short icon" href="/images/favicon.ico"><link rel="stylesheet" href="/css/bubuzou.css"><link rel="search" type="application/opensearchdescription+xml" href="https://lozn.top/atom.xml" title="情迁博客"><meta name="generator" content="Hexo 5.4.1"></head><body><header><div class="header row"> <a href="/" class="logo-link"><img src="/images/logo.png"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/archives/" target="_self" data-hover="归档" class="nav-list-link">归档</a></li><li class="nav-list-item"><a href="https://godhand.lozn.top" target="_blank" data-hover="神之手" class="nav-list-link">神之手</a></li><li class="nav-list-item"><a href="https://robot.lozn.top" target="_blank" data-hover="机器人" class="nav-list-link">机器人</a></li><li class="nav-list-item"><a href="/categories/情迁软件/" target="_self" data-hover="情迁" class="nav-list-link">情迁</a></li><li class="nav-list-item"><a href="https://www.jianshu.com/u/9b0768e66d01" target="_blank" data-hover="简书" class="nav-list-link">简书</a></li><li class="nav-list-item"><a href="/update/" target="_self" data-hover="下载" class="nav-list-link">下载</a></li><li class="nav-list-item"><a href="/about/" target="_self" data-hover="关于" class="nav-list-link">关于</a></li></ul><div class="search"><a id="search_btn" href="#search"></a></div></div></header><div class="row scroll-con"><section class="container"><!-- for archive page --><div id="postAr" class="post"><article class="post-block"><h1 class="post-title">【官方推荐方式】【原创】安卓换肤踩坑纯色模式app使用attr轻松实现定制颜色主题和深色主题</h1><div class="post-info">2022-04-13<p class="visit"><i data-hk-page="current">Loading</i><span>次访问</span></p></div><div class="post-content"><p>简书链接:<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/6f8587a4dde1">【官方推荐方式】【原创】安卓换肤踩坑纯色模式app使用attr轻松实现定制颜色主题和深色主题</a><br>文章字数：2507,阅读全文大约需要10分钟</p>
+<p>如果在网上搜换肤，方案五花八门，但是根据app的需求，以及无设计师的情况下，基本上简约风格app,这种风格下只需要几个颜色就行了，根本不需要动态从磁盘加载皮肤apk,而且通过反射操作侵入性太强，因此attr大法才是最适合目前的我所做的app实现。</p>
+<p>网上的换肤方法侵入性太强，而纯色app不需要各种花式的皮肤，基本上2三套颜色就行了，主色，次色，而其他则非黑即白。深色模式实现就更简单了，用着色tint就实现了。</p>
+<p>经过了几天的研究发现，动态修改<code>setTheme</code>是有bug的， bug就是状态栏颜色和actionbar在未在activity定义attr背景的情况下实现修改actionbar的就有这个bug,2015年在stackoverflow网站上就有人提出解决方法，这个解决方法是没有办法的方法，需要在baseactivity进行判断，如果有actionbar就设置actionbar颜色，</p>
+<p>以及设置状态栏颜色。</p>
+<p>#关于偏见<br>偏见源于他们对主题的掌握度不够，因为所有的地方都需要设置颜色，实际上基本是不需要单独设置的，只有个别控件的着色要单独设置除外，也就是基本上可以在全局主题里面几行代码可以搞定，网上却吐槽非常麻烦需要单独设置attr？，大言不惭的贬低官方的技术，试问自己对主题的各种属性的作用又了解多少呢？</p>
+<h1 id="达到的效果"><a href="#达到的效果" class="headerlink" title="达到的效果"></a>达到的效果</h1><p>在颜色选择器中是可以直接使用实现的属性<code>?attr</code><br>而在drawable,则需要包裹一层drawable引用color，直接使用<code>color</code>属性也是会报错的，<br>正常的按钮，对话框，控件不需要再通过代码，xml设置颜色，</p>
+<p>而网上的操作性太麻烦，正规的写法就是官方的写法，能不在view xml定义的就不在view xml定义<br>这样侵入性比较小。</p>
+<h1 id="颜色主题需要注意的事项"><a href="#颜色主题需要注意的事项" class="headerlink" title="颜色主题需要注意的事项"></a>颜色主题需要注意的事项</h1><p>drawable要使用颜色属性只能包裹一层shape</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span><br><span class="line">&lt;shape xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&gt;</span><br><span class="line">&lt;solid android:color=&quot;?attr/defaultThemeColorSecond&quot;/&gt;</span><br><span class="line">&lt;/shape&gt;</span><br></pre></td></tr></table></figure>
+<p>第三方自定义ui 有的是只支持颜色不支持attr的。则需要进行额外适配处理，<br>其处理方式就是根据属性查找对应的颜色 或者id (colorres)<br>颜色属性找颜色</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public static int attrFetchColor(Context context,int attrColor) &#123;</span><br><span class="line">    int[] attribute = new int[]&#123;attrColor&#125;;</span><br><span class="line">    TypedArray array =context.getTheme().obtainStyledAttributes(attribute);</span><br><span class="line">    int color = array.getColor(0, AppContext.getInstance().getResources().getColor(R.color.themeColor));</span><br><span class="line">    array.recycle();</span><br><span class="line">    return color;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>查找id</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  public static int attrFetchColorId(Context context,int attrColor) &#123;</span><br><span class="line">        int[] attribute = new int[]&#123;attrColor&#125;;</span><br><span class="line">        TypedArray array = context.obtainStyledAttributes(attribute);</span><br><span class="line">        int colorID = array.getResourceId(0, R.color.themeColor);</span><br><span class="line">        array.recycle();</span><br><span class="line">        return colorID;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">``````</span><br><span class="line"></span><br><span class="line">在baseactivity onCreate中修改状态栏颜色</span><br></pre></td></tr></table></figure>
+
+<pre><code>public static void updateActionBarAndStatusColor(Activity activity) &#123;
+    if (activity instanceof AppCompatActivity) &#123;
+        AppCompatActivity appCompatActivity = (AppCompatActivity) activity;
+        ActionBar supportActionBar = appCompatActivity.getSupportActionBar();
+        if (supportActionBar != null) &#123;
+            int i = AppUtils.attrFetchColor(activity,R.attr.defaultThemeColor);
+            supportActionBar.setBackgroundDrawable(new ColorDrawable(i));
+        &#125;
+
+    &#125;
+    android.app.ActionBar actionBar = activity.getActionBar();
+    if (actionBar != null) &#123;
+        int color = AppUtils.attrFetchColor(activity,R.attr.defaultThemeColor);
+        actionBar.setBackgroundDrawable(new ColorDrawable(color));
+    &#125;
+
+    if (Build.VERSION.SDK_INT &gt;= 21) &#123;
+</code></pre>
+<p>&#x2F;&#x2F;            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);<br>&#x2F;&#x2F;            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);<br>            int statusBarBackground &#x3D; AppUtils.attrFetchColor(activity,R.attr.colorPrimaryDark);</p>
+<pre><code>        Window window = activity.getWindow();
+</code></pre>
+<p>&#x2F;&#x2F;            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);<br>&#x2F;&#x2F;            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);<br>&#x2F;&#x2F;            window.setStatusBarColor(backgroundColor);<br>            window.setStatusBarColor(statusBarBackground);<br>        }</p>
+<pre><code>&#125;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">主题修改代码</span><br></pre></td></tr></table></figure>
+<p> getBinding().rlMyThemeSetting.setOnClickListener(new View.OnClickListener() {<br>            @Override<br>            public void onClick(View v) {<br>                AlertDialog.Builder builder &#x3D; new AlertDialog.Builder(getActivity());<br>                int currentMode &#x3D; NightModeUtils.Companion.getSpfThemeMode(AppContext.getInstance());<br>                ThemeMode[] values &#x3D; ThemeMode.values();<br>                CharSequence[] items&#x3D;new CharSequence[values.length];<br>                for (int i &#x3D; 0; i &lt; values.length; i++) {<br>                    String title &#x3D; AppContext.getInstance().getString(values[i].getStringValueId());<br>                    items[i]&#x3D;title;<br>                }<br>                builder.setSingleChoiceItems(items, currentMode, new DialogInterface.OnClickListener() {<br>                    @Override<br>                    public void onClick(DialogInterface dialog, int which) {<br>                        if (which !&#x3D; currentMode) {<br>                            dialog.dismiss();<br>                            ThemeMode value &#x3D; values[which];<br>                            NightModeUtils.getInstance(AppContext.getInstance()).setThemeMode(value);<br>                            EventBus.getDefault().post(new ThemeChangeEvent().themeChange());</p>
+<pre><code>                    &#125;
+
+                &#125;
+
+            &#125;);
+            builder.setTitle(AppContext.getStr(R.string.deep_color_theme_setting));
+            builder.show();
+
+        &#125;
+    &#125;);
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">收到事件进行```       recreate();``` ，我这里是在mainact,mainact可直接```recreate```,无需```finish```</span><br><span class="line">适配起来挺快的，通过各种批量替换</span><br><span class="line">但是需要注意的是，第三方对颜色适配做的很烂，哪怕大家众所周知的smartrefresh也不支持属性引用颜色。 因此主要的适配就是处理第三方框架的问题，</span><br><span class="line">这个适配工作基本上一天就搞定了。</span><br><span class="line">另外花的实际是纠结研究为啥actionbar和状态栏颜色通过setTheme无效花费了很多时间，在attach里面替换，以及研究theme的各种方法，以及引用再引用的方式也解决不了问题，</span><br><span class="line">最后既然无效我只能另外走方法了，强制设置。</span><br><span class="line"></span><br><span class="line">attr.xml定义 </span><br></pre></td></tr></table></figure>
+<pre><code>&lt;attr name=&quot;defaultThemeColor&quot; format=&quot;reference|color&quot;&gt;&lt;/attr&gt;
+&lt;attr name=&quot;defaultThemeColorSecond&quot; format=&quot;reference|color&quot;&gt;&lt;/attr&gt;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">其实现在每一个主题都实现了，</span><br><span class="line"></span><br><span class="line">下面附上theme.xml 仔细看 都实现了defaultThemeColor  defaultThemeColorSecond 属性，</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+<pre><code>&lt;style name=&quot;Theme.MyApplication.Blue&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorBlue&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondBlue&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorBlue&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorBlue&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkBlue&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantBlue&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryBlue&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentBlue&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;android:statusBarColor&quot; tools:targetApi=&quot;lollipop&quot;&gt; @color/colorPrimaryDarkBlue&lt;/item&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/colorPrimaryDarkBlue&lt;/item&gt;
+&lt;/style&gt;
+
+&lt;style name=&quot;Theme.MyApplication.Yellow&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorYellow&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondYellow&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorYellow&lt;/item&gt;
+
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorYellow&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentYellow&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkYellow&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantYellow&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryYellow&lt;/item&gt;
+
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;android:statusBarColor&quot;&gt;@color/colorPrimaryVariantYellow&lt;/item&gt;
+    &lt;item name=&quot;controlBackground&quot;&gt;@color/colorPrimaryDarkYellow&lt;/item&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/colorPrimaryDarkYellow&lt;/item&gt;
+&lt;/style&gt;
+
+
+
+&lt;style name=&quot;Theme.MyApplication.GREEN&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorGreen&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondGreen&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorGreen&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorGreen&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentGreen&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkGreen&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantGreen&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryGreen&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;android:statusBarColor&quot; tools:targetApi=&quot;lollipop&quot;&gt;@color/colorPrimaryDarkGreen &lt;/item&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/colorPrimaryDarkGreen &lt;/item&gt;
+
+&lt;/style&gt;
+
+
+
+
+
+&lt;style name=&quot;Theme.MyApplication.PURPLE&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorPurple&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondPurple&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorPurple&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorPurple&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentPurple&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkPurple&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantPurple&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryPurple&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/themeColorPurple&lt;/item&gt;
+    &lt;item name=&quot;android:statusBarColor&quot;&gt;@color/colorPrimaryDarkPurple&lt;/item&gt;
+
+&lt;/style&gt;
+
+
+
+
+
+&lt;style name=&quot;Theme.MyApplication.Amber&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorAmber&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondAmber&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorAmber&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorAmber&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentAmber&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkAmber&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantAmber&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryAmber&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/themeColorAmber&lt;/item&gt;
+    &lt;item name=&quot;android:statusBarColor&quot;&gt;@color/colorPrimaryDarkAmber&lt;/item&gt;
+&lt;/style&gt;
+
+&lt;style name=&quot;Theme.MyApplication.Cyan&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorCyan&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondCyan&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorCyan&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorCyan&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentCyan&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkCyan&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantCyan&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryCyan&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/themeColorCyan&lt;/item&gt;
+    &lt;item name=&quot;android:statusBarColor&quot;&gt;@color/colorPrimaryDarkCyan&lt;/item&gt;
+&lt;/style&gt;
+
+
+
+
+
+
+&lt;style name=&quot;Theme.MyApplication.Brown&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorBrown&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondBrown&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorBrown&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorBrown&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentBrown&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkBrown&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantBrown&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryBrown&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/themeColorBrown&lt;/item&gt;
+    &lt;item name=&quot;android:statusBarColor&quot;&gt;@color/colorPrimaryDarkBrown&lt;/item&gt;
+
+&lt;/style&gt;
+
+
+
+
+
+
+
+
+&lt;style name=&quot;Theme.MyApplication.Grey&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorGrey&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondGrey&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorGrey&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorGrey&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentGrey&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkGrey&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantGrey&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryGrey&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/themeColorGrey&lt;/item&gt;
+    &lt;item name=&quot;android:statusBarColor&quot;&gt;@color/colorPrimaryDarkGrey&lt;/item&gt;
+&lt;/style&gt;
+
+
+
+
+&lt;style name=&quot;Theme.MyApplication.DeepOrange&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorDeepOrange&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondDeepOrange&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorDeepOrange&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorDeepOrange&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccentDeepOrange&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDarkDeepOrange&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantDeepOrange&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariantOrange&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/themeColorDeepOrange&lt;/item&gt;
+    &lt;item name=&quot;android:statusBarColor&quot;&gt;@color/colorPrimaryDarkDeepOrange&lt;/item&gt;
+&lt;/style&gt;
+&lt;style name=&quot;Theme.MyApplication.NotImpl&quot; parent=&quot;Theme.AppCompat.DayNight.DarkActionBar&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColor&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecond&lt;/item&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;?attr/defaultThemeColorSecond&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;?attr/defaultThemeColor&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;?attr/defaultThemeColorSecond&lt;/item&gt;
+&lt;/style&gt;
+
+&lt;style name=&quot;Theme.MyApplication.DefaultBlue&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColor&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecond&lt;/item&gt;
+    &lt;!--        style设置没效果代码批量设置--&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;?attr/defaultThemeColorSecond&lt;/item&gt;
+    &lt;item name=&quot;android:elevation&quot;&gt;0dp&lt;/item&gt;
+    &lt;!--        hide shadow--&gt;
+    &lt;item name=&quot;android:windowContentOverlay&quot;&gt;@null&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/colorPrimaryDark&lt;/item&gt;
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/colorPrimary&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorAccent&quot;&gt;@color/colorAccent&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimary&lt;/item&gt;
+
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/colorSecondaryVariant&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+</code></pre>
+<!--        <item name="android:statusBarColor">@color/colorPrimaryDark</item>-->
+<!--        <item name="statusBarBackground">@color/colorPrimaryDark</item>-->
+<pre><code>    &lt;!-- Customize your theme here. --&gt;
+&lt;/style&gt;
+
+
+&lt;style name=&quot;Theme.MyApplication.DefaultBlue.Global&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColor&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecond&lt;/item&gt;
+&lt;/style&gt;
+
+&lt;style name=&quot;Theme.MyApplication.BLACK&quot; parent=&quot;Theme.MyApplication.RootTheme&quot;&gt;
+    &lt;item name=&quot;defaultThemeColor&quot;&gt;@color/themeColorBlack&lt;/item&gt;
+    &lt;item name=&quot;defaultThemeColorSecond&quot;&gt;@color/themeColorSecondBlack&lt;/item&gt;
+    &lt;item name=&quot;android:buttonStyle&quot;&gt;@style/Widget.AppCompat.Button.Small&lt;/item&gt;
+    &lt;item name=&quot;colorButtonNormal&quot;&gt;@color/themeColorBlack&lt;/item&gt;
+    &lt;!--    &lt;style name=&quot;Theme.MyApplication&quot; parent=&quot;Theme.MaterialComponents.Light.DarkActionBar&quot;&gt;--&gt;
+    &lt;!-- Primary brand color. --&gt;
+    &lt;item name=&quot;colorPrimary&quot;&gt;@color/themeColorSecondBlack&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryDark&quot;&gt;@color/themeColorSecondBlack&lt;/item&gt;
+    &lt;item name=&quot;colorPrimaryVariant&quot;&gt;@color/colorPrimaryVariantBlack&lt;/item&gt;
+    &lt;item name=&quot;colorOnPrimary&quot;&gt;@color/colorOnPrimaryBlack&lt;/item&gt;
+    &lt;!-- Secondary brand color. --&gt;
+    &lt;item name=&quot;colorSecondary&quot;&gt;@color/colorSecondary&lt;/item&gt;
+    &lt;!--        &lt;item name=&quot;colorSecondary&quot;&gt;@color/teal_200&lt;/item&gt;--&gt;
+    &lt;item name=&quot;colorSecondaryVariant&quot;&gt;@color/themeColorSecondBlack&lt;/item&gt;
+    &lt;item name=&quot;colorOnSecondary&quot;&gt;@color/colorOnSecondary&lt;/item&gt;
+    &lt;!-- Status bar color. --&gt;
+    &lt;item name=&quot;android:statusBarColor&quot; tools:targetApi=&quot;lollipop&quot;&gt; @color/colorPrimaryVariantBlack&lt;/item&gt;
+    &lt;item name=&quot;statusBarBackground&quot;&gt;@color/themeColorBlack&lt;/item&gt;
+
+&lt;/style&gt;
+
+
+
+
+
+&lt;style name=&quot;Theme.MyApplication.BLACK.NoActionBar&quot; parent=&quot;Theme.MyApplication.BLACK&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+
+
+
+&lt;style name=&quot;Theme.MyApplication.DefaultBlue.NoActionBar&quot; parent=&quot;Theme.MyApplication.DefaultBlue&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+
+&lt;style name=&quot;Theme.MyApplication.Amber.NoActionBar&quot; parent=&quot;Theme.MyApplication.Amber&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+
+
+&lt;style name=&quot;Theme.MyApplication.GREEN.NoActionBar&quot; parent=&quot;Theme.MyApplication.GREEN&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+
+
+
+&lt;style name=&quot;Theme.MyApplication.PURPLE.NoActionBar&quot; parent=&quot;Theme.MyApplication.PURPLE&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+&lt;style name=&quot;Theme.MyApplication.Grey.NoActionBar&quot; parent=&quot;Theme.MyApplication.Grey&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+
+&lt;style name=&quot;Theme.MyApplication.Yellow.NoActionBar&quot; parent=&quot;Theme.MyApplication.Yellow&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+&lt;style name=&quot;Theme.MyApplication.Blue.NoActionBar&quot; parent=&quot;Theme.MyApplication.Blue&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+
+&lt;style name=&quot;Theme.MyApplication.Brown.NoActionBar&quot; parent=&quot;Theme.MyApplication.Brown&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+
+&lt;style name=&quot;Theme.MyApplication.Cyan.NoActionBar&quot; parent=&quot;Theme.MyApplication.Cyan&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+&lt;style name=&quot;Theme.MyApplication.DeepOrange.NoActionBar&quot; parent=&quot;Theme.MyApplication.DeepOrange&quot;&gt;
+    &lt;item name=&quot;windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowActionBar&quot;&gt;false&lt;/item&gt;
+    &lt;item name=&quot;android:windowNoTitle&quot;&gt;true&lt;/item&gt;
+    &lt;item name=&quot;android:actionMenuTextColor&quot;&gt;@color/white_no_night&lt;/item&gt;
+    &lt;item name=&quot;windowNoTitle&quot;&gt;true&lt;/item&gt;
+&lt;/style&gt;
+</code></pre>
+</resources>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root.</span><br></pre></td></tr></table></figure>
+<pre><code>&lt;style name=&quot;Theme.MyApplication.RootTheme&quot; parent=&quot;Theme.MaterialComponents.DayNight.DarkActionBar&quot;&gt;
+&lt;/style&gt;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">color实现</span><br></pre></td></tr></table></figure>
+<p> <color name="themeColor">#5768FE</color><br>    <color name="printtestcolor">#f2c4c4</color></p>
+<pre><code>&lt;color name=&quot;themeColorSecond&quot;&gt;#5766FF&lt;/color&gt;
+
+&lt;!--
+    &lt;color name=&quot;themeColor&quot; &gt;#1D4C78&lt;/color&gt;
+    &lt;color name=&quot;themeColorSecond&quot; &gt;#1F4E7A&lt;/color&gt;--&gt;
+</code></pre>
+<!--    http://mcg.mbitson.com/#!?mcgpalette0=%235768fe  根据颜色找出更深的或者更淡淡的颜色-->
+<pre><code>&lt;color name=&quot;colorPrimary&quot;&gt;@color/themeColor&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDark&quot;&gt;#4F60FE&lt;/color&gt;
+&lt;color name=&quot;colorAccent&quot;&gt;#536DFE&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariant&quot;&gt;@color/themeColor&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimary&quot;&gt;@color/white&lt;/color&gt;
+
+
+&lt;color name=&quot;colorSecondary&quot;&gt;@color/light_blue_disable&lt;/color&gt;
+&lt;color name=&quot;colorSecondaryVariant&quot;&gt;@color/teal_700&lt;/color&gt;
+&lt;color name=&quot;colorOnSecondary&quot;&gt;@color/black&lt;/color&gt;
+
+&lt;color name=&quot;themeColorPurple&quot;&gt;@color/purple_300&lt;/color&gt;
+&lt;color name=&quot;colorAccentPurple&quot;&gt;#E040FB&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondPurple&quot;&gt;@color/purple_300&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryPurple&quot;&gt;@color/purple_300&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkPurple&quot;&gt;#7B1FA2&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantPurple&quot;&gt;@color/purple_300&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryPurple&quot;&gt;@color/white&lt;/color&gt;
+
+
+
+&lt;color name=&quot;themeColorYellow&quot;&gt;#FF9800&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondYellow&quot;&gt;#FF9800&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryYellow&quot;&gt;#F57C00&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkYellow&quot;&gt;#FF9800&lt;/color&gt;
+&lt;color name=&quot;colorAccentYellow&quot;&gt;#FF9800&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantYellow&quot;&gt;#FF9800&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryYellow&quot;&gt;@color/white&lt;/color&gt;
+
+
+
+&lt;color name=&quot;themeColorGreen&quot;&gt;@color/green_700&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondGreen&quot;&gt;@color/green_700&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryGreen&quot;&gt;@color/green_700&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkGreen&quot;&gt;#388E3C&lt;/color&gt;
+&lt;color name=&quot;colorAccentGreen&quot;&gt;#4CAF50&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantGreen&quot;&gt;@color/green_700&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryGreen&quot;&gt;@color/white&lt;/color&gt;
+
+
+
+
+&lt;color name=&quot;themeColorBlue&quot;&gt;@color/blue_900&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondBlue&quot;&gt;@color/blue_900&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryBlue&quot;&gt;@color/blue_900&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkBlue&quot;&gt;@color/blue_900&lt;/color&gt;
+&lt;color name=&quot;colorAccentBlue&quot;&gt;#448AFF&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantBlue&quot;&gt;@color/blue_900&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryBlue&quot;&gt;@color/white&lt;/color&gt;
+
+
+&lt;color name=&quot;themeColorBlack&quot;&gt;@color/quantum_black_100&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondBlack&quot;&gt;@color/quantum_black_100&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryBlack&quot;&gt;@color/quantum_black_100&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryAccent&quot;&gt;#5D4037&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantBlack&quot;&gt;@color/quantum_black_100&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryBlack&quot;&gt;@color/white&lt;/color&gt;
+
+
+
+&lt;color name=&quot;themeColorBrown&quot; &gt;#795548&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondBrown&quot; &gt;#795548&lt;/color&gt;
+&lt;color name=&quot;colorAccentBrown&quot;&gt;#9E9E9E&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkBrown&quot;&gt;#5D4037&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantBrown&quot;&gt;@color/black_overlay&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryBrown&quot;&gt;@color/black&lt;/color&gt;
+
+
+&lt;color name=&quot;themeColorTeal&quot; &gt;#009688&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondTeal&quot; &gt;#757575&lt;/color&gt;
+&lt;color name=&quot;colorAccentTeal&quot;&gt;#00BCD4&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkTeal&quot;&gt;#00796B&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantTeal&quot;&gt;@color/black_overlay&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryTeal&quot;&gt;@color/black&lt;/color&gt;
+
+&lt;color name=&quot;themeColorCyan&quot; &gt;#00BCD4&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondCyan&quot; &gt;#0097A7&lt;/color&gt;
+&lt;color name=&quot;colorAccentCyan&quot;&gt;#009688&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkCyan&quot;&gt;#0097A7&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantCyan&quot;&gt;#B2EBF2&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryCyan&quot;&gt;#FFFFFF&lt;/color&gt;
+
+&lt;color name=&quot;themeColorAmber&quot; &gt;#FFC107&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondAmber&quot; &gt;#FFC107&lt;/color&gt;
+&lt;color name=&quot;colorAccentAmber&quot;&gt;#FFC107&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkAmber&quot;&gt;#FFA000&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantAmber&quot;&gt;#212121&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryAmber&quot;&gt;#212121&lt;/color&gt;
+
+&lt;color name=&quot;themeColorDeepOrange&quot; &gt;#FF5722&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondDeepOrange&quot; &gt;#FF5722&lt;/color&gt;
+&lt;color name=&quot;colorAccentDeepOrange&quot;&gt;#FF4081&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkDeepOrange&quot;&gt;#E64A19&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantDeepOrange&quot;&gt;#212121&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryDeepOrange&quot;&gt;#212121&lt;/color&gt;
+&lt;color name=&quot;colorSecondaryVariantOrange&quot;&gt;#E64A19&lt;/color&gt;
+
+&lt;color name=&quot;themeColorGrey&quot; &gt;#607D8B&lt;/color&gt;
+&lt;color name=&quot;themeColorSecondGrey&quot; &gt;#757575&lt;/color&gt;
+&lt;color name=&quot;colorAccentGrey&quot;&gt;#9E9E9E&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryDarkGrey&quot;&gt;#455A64&lt;/color&gt;
+&lt;color name=&quot;colorPrimaryVariantGrey&quot;&gt;@color/black_overlay&lt;/color&gt;
+&lt;color name=&quot;colorOnPrimaryGrey&quot;&gt;@color/black&lt;/color&gt;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">![image.png](https://upload-images.jianshu.io/upload_images/2815884-229086c48c5ba0a0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</span><br><span class="line">![image.png](https://upload-images.jianshu.io/upload_images/2815884-5c3002bf128e227e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</span><br><span class="line"></span><br><span class="line">深色主题values-night  themes.xml</span><br><span class="line">把正常颜色的拷贝过来然后指定颜色就行了，</span><br><span class="line">修改主题的代码 baseactivityonCreate调用在setContentView之前</span><br></pre></td></tr></table></figure>
+<p>  fun applySetting(context: Context?): Int {<br>        var themeId &#x3D; 0;<br>        &#x2F;&#x2F; 检查主题<br>        val themeModeInt &#x3D; getSpfThemeMode()<br>        val themeMode &#x3D; ThemeMode.parseOfInt(themeModeInt)<br>        var disableActionBar: Boolean &#x3D; false;<br>        var actName: String &#x3D; “”;<br>        var needActionBar:Int &#x3D;-1;<br>        if (context is BaseActivity) {<br>            needActionBar &#x3D; context.needActionBar()<br>            if( needActionBar &#x3D;&#x3D; 1) {<br>                disableActionBar &#x3D; false;<br>            }else if( needActionBar &#x3D;&#x3D; 0) {<br>                disableActionBar &#x3D; true;<br>            }<br>        }<br>            actName &#x3D;  context?.javaClass?.simpleName + “ ,是否禁用actionBar “ + disableActionBar;<br>        if (context is AppCompatActivity) {<br>            if (needActionBar&#x3D;&#x3D;-1) {<br>                var act: AppCompatActivity &#x3D; context;<br>                disableActionBar &#x3D; if(act.supportActionBar!&#x3D;null) true else true;&#x2F;&#x2F;act.supportActionBar is WindowDecorActionBar<br>            }<br>        }<br>        Log.w(“ThemeStyle”, “主题模式 ${themeMode.name} act $actName”);</p>
+<pre><code>    if (themeMode == ThemeMode.BLUE_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Blue_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Blue
+        &#125;
+    &#125; else if (themeMode == ThemeMode.YELLOW_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Yellow_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Yellow
+        &#125;
+    &#125; else if (themeMode == ThemeMode.PURPLE_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_PURPLE_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_PURPLE
+        &#125;
+    &#125; else if (themeMode == ThemeMode.GREEN_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_GREEN_NoActionBar;
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_GREEN
+        &#125;
+    &#125; else if (themeMode == ThemeMode.GREY_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Grey_NoActionBar;
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Grey
+        &#125;
+    &#125; else if (themeMode == ThemeMode.BROWN_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Brown_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Brown
+        &#125;
+    &#125; else if (themeMode == ThemeMode.DEEP_ORANGE_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_DeepOrange_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_DeepOrange
+        &#125;
+    &#125; else if (themeMode == ThemeMode.AMBER_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Amber_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Amber
+        &#125;
+    &#125; else if (themeMode == ThemeMode.CYAN_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Cyan_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Cyan
+        &#125;
+    &#125; else if (themeMode == ThemeMode.BLACK_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_BLACK_NoActionBar;
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_BLACK;
+        &#125;
+    &#125; else &#123;
+        if (disableActionBar) &#123;//如果appcontext设置actionbar,act manifest.xml没有声明解除actionbar,然后调用setSupportBar则会抛出异常，因此需要处理适配。
+            themeId = R.style.Theme_MyApplication_DefaultBlue_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_DefaultBlue
+        &#125;
+    &#125;
+
+    if (themeId != 0) &#123;
+        context?.setTheme(themeId)
+</code></pre>
+<p>&#x2F;&#x2F;            return themeId;<br>        }<br>        AppCompatDelegate.setDefaultNightMode(<br>            when (themeMode) {<br>                ThemeMode.MODE_ALWAYS_ON -&gt; AppCompatDelegate.MODE_NIGHT_YES<br>                ThemeMode.MODE_ALWAYS_OFF -&gt; AppCompatDelegate.MODE_NIGHT_NO<br>                ThemeMode.MODE_FOLLOW_SYSTEM -&gt; AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM<br>                else -&gt; {<br>                    AppCompatDelegate.MODE_NIGHT_NO<br>                }<br>            }</p>
+<pre><code>    )
+    return themeId
+
+&#125;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">如果不为0，</span><br></pre></td></tr></table></figure>
+<pre><code>if (color != 0) &#123;
+</code></pre>
+<p>&#x2F;&#x2F;            getTheme().applyStyle(color, true);<br>            AppUtils.updateActionBarAndStatusColor(this);<br>        }</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">另外补充一点，按钮这些一般我都没有修改在每一个activity xml设置的，遵循material design以及theme的写法，全局就可以进行操作的，在```      &lt;item name=&quot;colorPrimary&quot;&gt;```就完成了适配，</span><br><span class="line">主要的适配工作还是处理selector的颜色以及第三方框架引用了颜色的情况，另外处理深色兼容的适配。</span><br><span class="line"></span><br><span class="line">另外关于重启生效的事情，recreate也是只能修改部分颜色而在我自己曾经写的一款app没有这样的问题，经过比较发现，我的那个app没有一个app是额外指定了主题的，所以状态栏颜色等都能自动马上生效，而且不需要通过代码修改状态栏颜色，因此这个bug是act的xml定义的主题和代码设置的主题冲突bug.</span><br><span class="line"></span><br><span class="line">关于``` This Activity already has an action bar supplie```</span><br></pre></td></tr></table></figure>
+<p> This Activity already has an action bar supplied by the window decor. Do not request Window.FEATURE_SUPPORT_ACTION_BAR and set windowActionBar to false in your theme to use a Toolbar instead.<br>                                                                                                        at androidx.appcompat.app.AppCompatDelegateImpl.setSupportActionBar(Ap</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">如果在actionbar已经在xml中指定的情况（如果act没有指定则从application节点继承），在代码里面继续设置是会报错的，可在setContentView代码之前调用setTheme指定不包含actionbar的解除actionbar</span><br><span class="line">则调用```setSupportActionBar```不会抛出已设置的错误。</span><br><span class="line">setSupportActionBar的作用是把布局xml中的toolbar 依附到act中。</span><br><span class="line"></span><br><span class="line">关于状态栏通过setTheme  recreate有些东西不生效 ，重启不生效的原因 最根本原因是使用了MaterialComponents 主题而不是Theme.AppCompat，但是不使用MaterialComponents主题会导致google的组件样式无法全局生效，这是个矛盾，而且导致我的app大量崩溃，都是因为google的组件问题。</span><br><span class="line">然后我继续找问题，还是改成了MaterialComponents主题，发现recreate又没有bug了，可以不重启全部更新。 之前又不行，我搞的精神崩溃了，也许是编译缓存问题？？。。</span><br><span class="line">总之最后通过recreate可以实现当前界面更新状态栏，不过第二个界面则不行，需要代码设置。不过体验比之前好了，不需要彻底重启app,由于保存了状态，基本上切换主题就感觉没有重启act的感觉，实际上是重建了的。</span><br><span class="line"></span><br><span class="line">最后的最后我发现深色切换 回来或者切换过去，会导致很多地方不生效，比如状态栏，部分背景，</span><br><span class="line">在recreate执行之前重新设置一遍主题可以解决此问题</span><br></pre></td></tr></table></figure>
+<pre><code>if (which != currentMode) &#123;
+                        dialog.dismiss();
+                        ThemeMode value = values[which];
+                        NightModeUtils.getInstance(AppContext.getInstance()).setThemeMode(value);
+                        if (currentMode == 0 || which == 0) &#123;//如果是从深色切换过来的就需要先执行setTheme，也就是执行了2次。
+                            NightModeUtils.getInstance(getContext()).applySetting(getContext());
+                            getActivity().recreate();
+                        &#125; else &#123;
+                            EventBus.getDefault().post(new ThemeChangeEvent().themeChange());
+
+                        &#125;
+
+                    &#125;
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">最后的最后是这样的</span><br></pre></td></tr></table></figure>
+<p> ThemeMode value &#x3D; values[which];<br>                            NightModeUtils.getInstance(AppContext.getInstance()).setThemeMode(value);<br>                            if (currentMode &#x3D;&#x3D; 0 || which &#x3D;&#x3D; 0) {<br>                                &#x2F;&#x2F;call setTheme<br>                                NightModeUtils.getInstance(getContext()).applySetting(getContext());<br>                                &#x2F;&#x2F;如果重启会发现部分没生效，深色模式的切换是不需要重启就能生效的<br>                            } else {<br>                                getActivity().recreate();<br>                            }</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">完整代码</span><br></pre></td></tr></table></figure>
+
+<p>import android.app.Activity<br>import android.content.Context<br>import android.content.res.TypedArray<br>import android.util.Log<br>import androidx.appcompat.app.AppCompatActivity<br>import androidx.appcompat.app.AppCompatDelegate<br>import com.sotrun.app.R<br>import com.sotrun.app.base.BaseActivity<br>import com.sotrun.app.utils.DateUtils<br>import java.io.Serializable<br>import java.util.*</p>
+<p>open class NightModeUtils constructor(context: Context) {</p>
+<pre><code>private val mSpf =
+    context.applicationContext.getSharedPreferences(SP_THEME_NAME, Context.MODE_PRIVATE)
+
+companion object &#123;
+
+    @Volatile
+    private var INSTANCE: NightModeUtils? = null
+
+    fun getSpfThemeMode(context: Context): Int =
+        context.getSharedPreferences(SP_THEME_NAME, Context.MODE_PRIVATE)
+            .getInt(SPF_THEME_MODE, ThemeMode.MODE_FOLLOW_SYSTEM.intValue)
+
+    @JvmStatic
+    fun getInstance(context: Context): NightModeUtils =
+        INSTANCE ?: synchronized(this) &#123;
+            INSTANCE ?: NightModeUtils(context).also &#123;
+                INSTANCE = it
+            &#125;
+        &#125;
+
+    private const val SPF_THEME_MODE = &quot;theme_mode&quot;
+    private const val SP_THEME_NAME = &quot;config_data&quot;
+
+    private const val SPF_THEME_TIMER = &quot;theme_timer&quot;
+&#125;
+
+
+/** 获取设置 */
+private fun getSpfThemeMode(): Int =
+    mSpf.getInt(SPF_THEME_MODE, ThemeMode.MODE_FOLLOW_SYSTEM.intValue)
+
+/** 设置 */
+private fun setSpfThemeMode(mode: Int) &#123;
+    /*
+    注意，当两个编辑器同时修改首选项时
+</code></pre>
+<p>*时间，最后一个调用commit的人获胜。<br>＊<br>         *&#x2F;<br>        mSpf.edit().putInt(SPF_THEME_MODE, mode).commit()<br>    }</p>
+<pre><code>/** 获取时间设置 */
+private fun getSpfThemeTimer(): String = mSpf.getString(SPF_THEME_TIMER, null) ?: &quot;18:00~08:00&quot;
+
+/** 设置时间 */
+private fun saveSpfThemeTimer(timer: String) &#123;
+    mSpf.edit().putString(SPF_THEME_TIMER, timer).apply()
+&#125;
+
+/** 获取设置好的ThemeMode */
+fun getThemeMode(): ThemeMode = ThemeMode.parseOfInt(getSpfThemeMode())
+
+/** 设置模式 */
+fun setThemeMode(mode: ThemeMode) &#123;
+    setSpfThemeMode(mode.intValue)
+&#125;
+
+/** 获取设置好的定时时间 */
+fun getThemeTime(): ThemeTime &#123;
+    val timeStr = getSpfThemeTimer()
+    return ThemeTime(
+        beginHour = timeStr.split(&quot;~&quot;)[0].split(&quot;:&quot;)[0].toInt(),
+        beginMinute = timeStr.split(&quot;~&quot;)[0].split(&quot;:&quot;)[1].toInt(),
+        endHour = timeStr.split(&quot;~&quot;)[1].split(&quot;:&quot;)[0].toInt(),
+        endMinute = timeStr.split(&quot;~&quot;)[1].split(&quot;:&quot;)[1].toInt()
+    )
+&#125;
+
+/** 设置定时时间 */
+fun setThemeTime(time: ThemeTime) &#123;
+    saveSpfThemeTimer(time.toTimerString())
+&#125;
+
+/**
+ * 应用存储的设置
+ */
+fun applySetting() &#123;
+    applySetting(null);
+&#125;
+
+fun applySetting(context: Context?): Int &#123;
+    var themeId = 0;
+    // 检查主题
+    val themeModeInt = getSpfThemeMode()
+    val themeMode = ThemeMode.parseOfInt(themeModeInt)
+    var disableActionBar: Boolean = false;
+    var actName: String = &quot;&quot;;
+    var needActionBar:Int =-1;
+    if (context is BaseActivity) &#123;
+        needActionBar = context.needActionBar()
+        if( needActionBar == 1) &#123;
+
+            disableActionBar = false;
+        &#125;else if( needActionBar == 0) &#123;
+            disableActionBar = true;
+        &#125;
+    &#125;
+        actName =  context?.javaClass?.simpleName + &quot; ,是否禁用actionBar &quot; + disableActionBar;
+    if (context is AppCompatActivity) &#123;
+        if (needActionBar==-1) &#123;
+            var act: AppCompatActivity = context;
+            val a: TypedArray = act.obtainStyledAttributes(R.styleable.AppCompatTheme)
+            val needActionBar = a.getBoolean(R.styleable.AppCompatTheme_windowActionBar, false)
+            disableActionBar = !needActionBar
+</code></pre>
+<p>&#x2F;&#x2F;                disableActionBar &#x3D; if(act.supportActionBar!&#x3D;null) true else true;&#x2F;&#x2F;act.supportActionBar is WindowDecorActionBar<br>            }<br>        }<br>        Log.w(“ThemeStyle”, “主题模式 ${themeMode.name} act $actName”);</p>
+<pre><code>    if (themeMode == ThemeMode.BLUE_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Blue_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Blue
+        &#125;
+    &#125; else if (themeMode == ThemeMode.YELLOW_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Yellow_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Yellow
+        &#125;
+    &#125; else if (themeMode == ThemeMode.PURPLE_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_PURPLE_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_PURPLE
+        &#125;
+    &#125; else if (themeMode == ThemeMode.GREEN_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_GREEN_NoActionBar;
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_GREEN
+        &#125;
+    &#125; else if (themeMode == ThemeMode.GREY_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Grey_NoActionBar;
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Grey
+        &#125;
+    &#125; else if (themeMode == ThemeMode.BROWN_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Brown_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Brown
+        &#125;
+    &#125; else if (themeMode == ThemeMode.DEEP_ORANGE_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_DeepOrange_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_DeepOrange
+        &#125;
+    &#125; else if (themeMode == ThemeMode.AMBER_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Amber_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Amber
+        &#125;
+    &#125; else if (themeMode == ThemeMode.CYAN_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_Cyan_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_Cyan
+        &#125;
+    &#125; else if (themeMode == ThemeMode.BLACK_THEME) &#123;
+        if (disableActionBar) &#123;
+            themeId = R.style.Theme_MyApplication_BLACK_NoActionBar;
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_BLACK;
+        &#125;
+    &#125; else &#123;
+        if (disableActionBar) &#123;//如果appcontext设置actionbar,act manifest.xml没有声明解除actionbar,然后调用setSupportBar则会抛出异常，因此需要处理适配。
+            themeId = R.style.Theme_MyApplication_DefaultBlue_NoActionBar
+        &#125; else &#123;
+            themeId = R.style.Theme_MyApplication_DefaultBlue
+        &#125;
+    &#125;
+
+    if (themeId != 0) &#123;
+        if(context is Activity)&#123;
+        context?.setTheme(themeId)
+
+        &#125;else&#123;
+</code></pre>
+<p>&#x2F;&#x2F;                context?.theme?.applyStyle(themeId, true)<br>            }<br>&#x2F;&#x2F;            return themeId;<br>        }<br>        AppCompatDelegate.setDefaultNightMode(<br>            when (themeMode) {<br>                ThemeMode.MODE_ALWAYS_ON -&gt; AppCompatDelegate.MODE_NIGHT_YES<br>                ThemeMode.MODE_ALWAYS_OFF -&gt; AppCompatDelegate.MODE_NIGHT_NO<br>                ThemeMode.MODE_FOLLOW_SYSTEM -&gt; AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM<br>                else -&gt; {<br>                    AppCompatDelegate.MODE_NIGHT_NO<br>                }<br>            }</p>
+<pre><code>    )
+    return themeId
+
+&#125;
+
+/**
+ * 定时开启
+ */
+private fun clock(): Int &#123;
+    val time = getThemeTime()
+    val startTime = time.startTime.replace(&quot;:&quot;, &quot;.&quot;).toFloat()
+    val stopTime = time.stopTime.replace(&quot;:&quot;, &quot;.&quot;).toFloat()
+    val curTime = DateUtils.getFormatDate(&quot;HH.mm&quot;, Date()).toFloat()
+    return if (stopTime &gt; startTime) &#123;
+        // 结束时间和开始时间都在同一天
+        if (curTime &gt; startTime &amp;&amp; curTime &lt; stopTime) &#123;
+            AppCompatDelegate.MODE_NIGHT_YES
+        &#125; else &#123;
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        &#125;
+    &#125; else &#123;
+        // 结束时间在开始时间的后一天
+        if (curTime &gt; startTime || curTime &lt; stopTime) &#123;
+            AppCompatDelegate.MODE_NIGHT_YES
+        &#125; else &#123;
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>}</p>
+<p>&#x2F;**</p>
+<ul>
+<li>主题设置时间</li>
+</ul>
+<p> *&#x2F;<br>data class ThemeTime(<br>    &#x2F;&#x2F; 开始小时<br>    val beginHour: Int,<br>    &#x2F;&#x2F; 开始分钟<br>    val beginMinute: Int,<br>    &#x2F;&#x2F; 结束小时<br>    val endHour: Int,<br>    &#x2F;&#x2F; 结束分钟<br>    val endMinute: Int,<br>    &#x2F;&#x2F; 开始时间<br>    var startTime: String &#x3D; “00:00”,<br>    &#x2F;&#x2F; 结束时间<br>    var stopTime: String &#x3D; “00:00”<br>) : Serializable {</p>
+<pre><code>init &#123;
+    startTime = &quot;$&#123;upTo2String(beginHour)&#125;:$&#123;upTo2String(beginMinute)&#125;&quot;
+    stopTime = &quot;$&#123;upTo2String(endHour)&#125;:$&#123;upTo2String(endMinute)&#125;&quot;
+&#125;
+
+fun toTimerString(): String = &quot;$startTime~$stopTime&quot;
+
+// 保存成长度为2的字符串
+private fun upTo2String(value: Int): String &#123;
+    val valueStr = &quot;$value&quot;
+    val sb = StringBuilder()
+    if (valueStr.length &lt; 2) &#123;
+        for (i in 0 until 2 - valueStr.length) &#123;
+            sb.append(&quot;0&quot;)
+        &#125;
+    &#125;
+    sb.append(valueStr)
+    return sb.toString().substring(sb.length - 2)
+&#125;
+</code></pre>
+<p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">设置代码</span><br></pre></td></tr></table></figure>
+<p>  getBinding().rlMyThemeSetting.setOnClickListener(new View.OnClickListener() {<br>            @Override<br>            public void onClick(View v) {<br>                AlertDialog.Builder builder &#x3D; new AlertDialog.Builder(getActivity());<br>                int currentMode &#x3D; NightModeUtils.Companion.getSpfThemeMode(AppContext.getInstance());<br>                ThemeMode[] values &#x3D; ThemeMode.values();<br>                ThemeColorSelectAdapter.Bean[] items &#x3D; new ThemeColorSelectAdapter.Bean[values.length];<br>                for (int i &#x3D; 0; i &lt; values.length; i++) {<br>                    String title &#x3D; AppContext.getInstance().getString(values[i].getStringValueId());<br>                    ThemeColorSelectAdapter.Bean bean &#x3D; new ThemeColorSelectAdapter.Bean();<br>                    bean.title &#x3D; title;<br>                    bean.color &#x3D; values[i].getColor();<br>                    items[i] &#x3D; bean;<br>                }<br>                ThemeColorSelectAdapter arrayAdapter &#x3D; new ThemeColorSelectAdapter(<br>                        getActivity(), R.layout.view_color_check_item, items);<br>                builder.setSingleChoiceItems(arrayAdapter, currentMode, new DialogInterface.OnClickListener() {<br>                    @Override<br>                    public void onClick(DialogInterface dialog, int which) {<br>                        if (which !&#x3D; currentMode) {<br>                            dialog.dismiss();<br>                            ThemeMode value &#x3D; values[which];<br>                            NightModeUtils.getInstance(AppContext.getInstance()).setThemeMode(value);<br>                            if (currentMode &#x3D;&#x3D; 0 || which &#x3D;&#x3D; 0) {<br>                                &#x2F;&#x2F;call setTheme<br>                                NightModeUtils.getInstance(getContext()).applySetting(getContext());<br>                                &#x2F;&#x2F;如果重启会发现部分没生效，深色模式的切换是不需要重启就能生效的，如果不先调用切换模式代码，调用recreate也是没用的。<br>                            } else {&#x2F;&#x2F;setTheme没用<br>                                getActivity().recreate();<br>                            }<br>                            updateThemeStatusTextView();</p>
+<pre><code>                    &#125;
+
+                &#125;
+
+            &#125;);
+            builder.setTitle(AppContext.getStr(R.string.deep_color_theme_setting));
+            builder.show();
+
+        &#125;
+    &#125;);
+</code></pre>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">thememode</span><br></pre></td></tr></table></figure>
+<p>enum class ThemeMode(val intValue: Int, val stringValueId: Int,val color:Int) {<br>    MODE_ALWAYS_ON(0, R.string.theme_mode_darkmode,R.color.black_no_dark),<br>    MODE_ALWAYS_OFF(1, R.string.theme_mode_default_blue,R.color.themeColorNoDark),<br>    MODE_FOLLOW_SYSTEM(2, R.string.theme_mode_dark_follow_system,R.color.themeColorNoDark),<br>    BLUE_THEME(3, R.string.theme_blue,R.color.themeColorBlueNoDark),<br>    PURPLE_THEME(4, R.string.theme_purple,R.color.themeColorPurpleNoDark),<br>    GREEN_THEME(5, R.string.theme_green,R.color.themeColorGreenNoDark),<br>    YELLOW_THEME(6, R.string.yellow,R.color.themeColorYellowNoDark),<br>    BROWN_THEME(7, R.string.theme_brown,R.color.themeColorBrownNoDark),<br>    GREY_THEME(8, R.string.theme_grey,R.color.themeColorGreyNoDark),<br>    AMBER_THEME(9, R.string.theme_amber,R.color.themeColorAmberNoDark),<br>    CYAN_THEME(10, R.string.theme_cyan,R.color.themeColorCyanNoDark),<br>    DEEP_ORANGE_THEME(11, R.string.theme_deep_orange,R.color.themeColorDeepOrangeNoDark),<br>    BLACK_THEME(12, R.string.theme_black,R.color.black_no_dark);<br>&#x2F;&#x2F;    MODE_TIMER(30, R.string.theme_mode_3);</p>
+<pre><code>companion object &#123;
+
+
+    @JvmStatic
+    fun parseOfInt(intValue: Int) : ThemeMode &#123;
+        return when(intValue) &#123;
+            MODE_ALWAYS_ON.intValue -&gt; MODE_ALWAYS_ON
+            MODE_ALWAYS_OFF.intValue -&gt; MODE_ALWAYS_OFF
+            MODE_FOLLOW_SYSTEM.intValue -&gt; MODE_FOLLOW_SYSTEM
+</code></pre>
+<p>&#x2F;&#x2F;                MODE_TIMER.intValue -&gt; MODE_TIMER<br>                BLUE_THEME.intValue -&gt; BLUE_THEME<br>                YELLOW_THEME.intValue -&gt; YELLOW_THEME<br>                PURPLE_THEME.intValue -&gt; PURPLE_THEME<br>                GREEN_THEME.intValue -&gt; GREEN_THEME<br>                BROWN_THEME.intValue -&gt; BROWN_THEME<br>                GREY_THEME.intValue -&gt; GREY_THEME<br>                CYAN_THEME.intValue -&gt; CYAN_THEME<br>                AMBER_THEME.intValue -&gt; AMBER_THEME<br>                DEEP_ORANGE_THEME.intValue -&gt; DEEP_ORANGE_THEME<br>                BLACK_THEME.intValue -&gt; BLACK_THEME<br>&#x2F;&#x2F;              BLACK_THEME.intValue,!in 0.. 30-&gt; BLACK_THEME<br>                else -&gt; MODE_FOLLOW_SYSTEM<br>            }<br>        }<br>    }<br>}</p>
+<pre><code>
+最后的总结就是 更换主题 需要重启然后调用setTheme,但是更换深色模式则需要调用  AppCompatDelegate.setDefaultNightMode不能重启.
+配色参考
+http://mcg.mbitson.com/#!?mcgpalette0=%235768fe
+https://www.materialpalette.com/light-blue/blue-grey
+https://codecrafted.net/randommaterial
+</code></pre>
+</div></article></div><div class="right-container"><div class="widget"><div class="category"><h4>分类归档</h4><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Android-bug%E5%BC%82%E5%B8%B8%E4%B8%8E%E8%A7%A3%E5%86%B3/">Android-bug异常与解决</a><span class="category-list-count">80</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Blog/">Blog</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Photo/">Photo</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/QQ%E6%8A%80%E5%B7%A7/">QQ技巧</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/andorid%E8%A7%A6%E6%91%B8%E4%B8%8E%E6%BB%91%E5%8A%A8/">andorid触摸与滑动</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android/">android</a><span class="category-list-count">145</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android-System/">android-System</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/androidUi%E5%B7%A9%E5%9B%BA%E7%AC%94%E8%AE%B0/">androidUi巩固笔记</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/androidtv%E5%BC%80%E5%8F%91/">androidtv开发</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E5%8A%A8%E7%94%BB/">android动画</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%8F%92%E4%BB%B6%E5%8C%96/">android插件化</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%9E%B6%E6%9E%84%E5%B8%88%E8%BF%9B%E9%98%B6/">android架构师进阶</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">android源码分析</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/android%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%9B%BE%E5%BD%A2%E7%BB%98%E5%88%B6/">android自定义与图形绘制</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/c/">c#</a><span class="category-list-count">37</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/c-c-JNI-Ndk/">c-c---JNI-Ndk</a><span class="category-list-count">88</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/eclipse/">eclipse</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/git/">git</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/gradle/">gradle</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/ide%E6%8A%80%E5%B7%A7/">ide技巧</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java/">java</a><span class="category-list-count">17</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/kotlin-with-java/">kotlin-with-java</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/linux/">linux</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/mac-ios/">mac-ios</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/php/">php</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/python/">python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/shell-bat-lua%E8%84%9A%E6%9C%AC/">shell-bat-lua脚本</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/window/">window</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E4%B8%8A%E8%BD%A6/">上车</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%AC%E5%91%8A/">公告</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%89%8D%E7%AB%AF/">前端</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%8A%9E%E5%85%AC/">办公</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%90%8E%E7%AB%AF/">后端</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/">地球</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/">中国</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/%E6%B9%96%E5%8D%97/">湖南</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9C%B0%E7%90%83/%E4%B8%AD%E5%9B%BD/%E6%B9%96%E5%8D%97/%E5%A8%84%E5%BA%95/">娄底</a><span class="category-list-count">1</span></li></ul></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%9E%83%E5%9C%BE%E5%A0%86/">垃圾堆</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%A5%87%E6%B7%AB%E6%8A%80%E5%B7%A7/">奇淫技巧</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8A%80%E5%B7%A7/">小程序技巧</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%83%85%E8%BF%81QQ%E6%9C%BA%E5%99%A8%E4%BA%BA/">情迁QQ机器人</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%83%85%E8%BF%81%E8%BD%AF%E4%BB%B6/">情迁软件</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%89%93%E8%B5%8F/">打赏</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E5%AD%A6/">数学</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%97%A5%E8%AE%B0%E6%9C%AC/">日记本</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%87%E7%BC%96/">汇编</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B5%8B%E8%AF%95/">测试</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B5%8B%E8%AF%95%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8C%96/">测试与自动化</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/">游戏开发</a><span class="category-list-count">35</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6/">版本控制</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A1%AC%E4%BB%B6%E7%BB%B4%E4%BF%AE/">硬件维修</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A7%91%E5%B9%BB/">科幻</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E6%95%B0%E5%AD%A6%E9%97%AE%E9%A2%98/">程序员的数学问题</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E6%9D%82%E9%A1%B9/">编程杂项</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BD%91%E7%AB%99%E5%BB%BA%E8%AE%BE/">网站建设</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BE%8E%E5%A5%B3/">美女</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BF%BB%E8%AF%91%E8%A7%86%E9%A2%91%E6%95%99%E7%A8%8B/">翻译视频教程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%B0%E5%BF%86/">记忆</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%B7%A8%E5%B9%B3%E5%8F%B0app/">跨平台app</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%B7%AF%E7%94%B1%E5%99%A8/">路由器</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%80%86%E5%90%91/">逆向</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%80%86%E5%90%91%E4%B8%8E%E5%AE%89%E5%85%A8/">逆向与安全</a><span class="category-list-count">85</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/">随笔</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E8%AF%95%E6%94%BB%E5%85%8B/">面试攻克</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9F%B3%E8%A7%86%E9%A2%91%E5%A4%84%E7%90%86/">音视频处理</a><span class="category-list-count">7</span></li></ul></div></div><div class="widget"><div class="tagcloud"><h4>标签云</h4><a href="/tags/Android-bug%E5%BC%82%E5%B8%B8%E4%B8%8E%E8%A7%A3%E5%86%B3/" style="font-size: 18.46px;">Android-bug异常与解决</a> <a href="/tags/CDN/" style="font-size: 10px;">CDN</a> <a href="/tags/Git/" style="font-size: 10.38px;">Git</a> <a href="/tags/JAVA/" style="font-size: 10px;">JAVA</a> <a href="/tags/Lua/" style="font-size: 10px;">Lua</a> <a href="/tags/QQ%E6%8A%80%E5%B7%A7/" style="font-size: 10px;">QQ技巧</a> <a href="/tags/WEB/" style="font-size: 10.38px;">WEB</a> <a href="/tags/andorid%E8%A7%A6%E6%91%B8%E4%B8%8E%E6%BB%91%E5%8A%A8/" style="font-size: 13.08px;">andorid触摸与滑动</a> <a href="/tags/android/" style="font-size: 20px;">android</a> <a href="/tags/android-studio/" style="font-size: 10px;">android studio</a> <a href="/tags/android-System/" style="font-size: 15.38px;">android-System</a> <a href="/tags/androidUi%E5%B7%A9%E5%9B%BA%E7%AC%94%E8%AE%B0/" style="font-size: 11.54px;">androidUi巩固笔记</a> <a href="/tags/androidtv%E5%BC%80%E5%8F%91/" style="font-size: 10.38px;">androidtv开发</a> <a href="/tags/android%E5%8A%A8%E7%94%BB/" style="font-size: 10px;">android动画</a> <a href="/tags/android%E6%8F%92%E4%BB%B6%E5%8C%96/" style="font-size: 14.23px;">android插件化</a> <a href="/tags/android%E6%9E%B6%E6%9E%84%E5%B8%88%E8%BF%9B%E9%98%B6/" style="font-size: 10.38px;">android架构师进阶</a> <a href="/tags/android%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" style="font-size: 12.31px;">android源码分析</a> <a href="/tags/android%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%9B%BE%E5%BD%A2%E7%BB%98%E5%88%B6/" style="font-size: 15.77px;">android自定义与图形绘制</a> <a href="/tags/c/" style="font-size: 17.69px;">c#</a> <a href="/tags/c-c-JNI-Ndk/" style="font-size: 19.23px;">c-c---JNI-Ndk</a> <a href="/tags/consectetur/" style="font-size: 10px;">consectetur</a> <a href="/tags/eclipse/" style="font-size: 12.31px;">eclipse</a> <a href="/tags/git/" style="font-size: 12.69px;">git</a> <a href="/tags/gradle/" style="font-size: 16.54px;">gradle</a> <a href="/tags/ide%E6%8A%80%E5%B7%A7/" style="font-size: 16.15px;">ide技巧</a> <a href="/tags/java/" style="font-size: 15px;">java</a> <a href="/tags/kotlin-with-java/" style="font-size: 15.77px;">kotlin-with-java</a> <a href="/tags/linux/" style="font-size: 11.15px;">linux</a> <a href="/tags/mac-ios/" style="font-size: 16.92px;">mac-ios</a> <a href="/tags/markdown/" style="font-size: 10px;">markdown</a> <a href="/tags/php/" style="font-size: 13.08px;">php</a> <a href="/tags/python/" style="font-size: 15.38px;">python</a> <a href="/tags/shell-bat-lua%E8%84%9A%E6%9C%AC/" style="font-size: 12.31px;">shell-bat-lua脚本</a> <a href="/tags/window/" style="font-size: 13.85px;">window</a> <a href="/tags/xposed%E6%8F%92%E4%BB%B6/" style="font-size: 10px;">xposed插件</a> <a href="/tags/%E4%B8%83%E7%89%9B/" style="font-size: 10px;">七牛</a> <a href="/tags/%E4%B8%8A%E8%BD%A6/" style="font-size: 11.92px;">上车</a> <a href="/tags/%E4%BB%A3%E7%A0%81%E7%BC%96%E5%86%99/" style="font-size: 10px;">代码编写</a> <a href="/tags/%E5%85%8DRoot/" style="font-size: 10px;">免Root</a> <a href="/tags/%E5%85%AC%E5%91%8A/" style="font-size: 11.15px;">公告</a> <a href="/tags/%E5%88%86%E8%BA%AB%E5%A4%A7%E5%B8%88/" style="font-size: 10px;">分身大师</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 12.69px;">前端</a> <a href="/tags/%E5%8A%9E%E5%85%AC/" style="font-size: 10px;">办公</a> <a href="/tags/%E5%90%8E%E7%AB%AF/" style="font-size: 10px;">后端</a> <a href="/tags/%E5%9B%BE%E7%89%87/" style="font-size: 10px;">图片</a> <a href="/tags/%E5%9E%83%E5%9C%BE%E5%A0%86/" style="font-size: 14.23px;">垃圾堆</a> <a href="/tags/%E5%A5%87%E6%B7%AB%E6%8A%80%E5%B7%A7/" style="font-size: 13.46px;">奇淫技巧</a> <a href="/tags/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8A%80%E5%B7%A7/" style="font-size: 14.23px;">小程序技巧</a> <a href="/tags/%E6%83%85%E8%BF%81QQ%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 10px;">情迁QQ机器人</a> <a href="/tags/%E6%83%85%E8%BF%81%E8%BD%AF%E4%BB%B6/" style="font-size: 18.08px;">情迁软件</a> <a href="/tags/%E6%89%93%E8%B5%8F/" style="font-size: 10px;">打赏</a> <a href="/tags/%E6%8F%92%E4%BB%B6/" style="font-size: 10px;">插件</a> <a href="/tags/%E6%95%B0%E5%AD%A6/" style="font-size: 11.92px;">数学</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" style="font-size: 11.54px;">数据库</a> <a href="/tags/%E6%97%A5%E8%AE%B0%E6%9C%AC/" style="font-size: 10.77px;">日记本</a> <a href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 10px;">机器人</a> <a href="/tags/%E6%B1%87%E7%BC%96/" style="font-size: 10px;">汇编</a> <a href="/tags/%E6%B5%8B%E8%AF%95%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8C%96/" style="font-size: 10.38px;">测试与自动化</a> <a href="/tags/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/" style="font-size: 17.31px;">游戏开发</a> <a href="/tags/%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6/" style="font-size: 10.38px;">版本控制</a> <a href="/tags/%E7%94%9F%E6%B4%BB/" style="font-size: 14.62px;">生活</a> <a href="/tags/%E7%A1%AC%E4%BB%B6%E7%BB%B4%E4%BF%AE/" style="font-size: 10.38px;">硬件维修</a> <a href="/tags/%E7%A7%91%E5%B9%BB/" style="font-size: 10px;">科幻</a> <a href="/tags/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E6%95%B0%E5%AD%A6%E9%97%AE%E9%A2%98/" style="font-size: 13.08px;">程序员的数学问题</a> <a href="/tags/%E7%BC%96%E7%A8%8B%E6%9D%82%E9%A1%B9/" style="font-size: 15.38px;">编程杂项</a> <a href="/tags/%E7%BF%BB%E8%AF%91%E8%A7%86%E9%A2%91%E6%95%99%E7%A8%8B/" style="font-size: 10px;">翻译视频教程</a> <a href="/tags/%E8%97%8F%E5%93%81/" style="font-size: 19.62px;">藏品</a> <a href="/tags/%E8%A7%86%E9%A2%91/" style="font-size: 10px;">视频</a> <a href="/tags/%E8%AE%B0%E5%BF%86/" style="font-size: 11.15px;">记忆</a> <a href="/tags/%E8%B7%A8%E5%B9%B3%E5%8F%B0app/" style="font-size: 13.85px;">跨平台app</a> <a href="/tags/%E8%B7%AF%E7%94%B1%E5%99%A8/" style="font-size: 11.15px;">路由器</a> <a href="/tags/%E9%80%86%E5%90%91/" style="font-size: 10px;">逆向</a> <a href="/tags/%E9%80%86%E5%90%91%E4%B8%8E%E5%AE%89%E5%85%A8/" style="font-size: 18.85px;">逆向与安全</a> <a href="/tags/%E9%93%BE%E6%8E%A5/" style="font-size: 10.38px;">链接</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 11.54px;">随笔</a> <a href="/tags/%E9%9D%A2%E8%AF%95%E6%94%BB%E5%85%8B/" style="font-size: 10.38px;">面试攻克</a> <a href="/tags/%E9%9F%B3%E8%A7%86%E9%A2%91%E5%A4%84%E7%90%86/" style="font-size: 12.31px;">音视频处理</a></div></div><div class="widget"><div class="recent"><h4>最近文章</h4><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/08/13/unity%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F%E7%9A%84%E6%A0%B7%E6%9D%BF%E4%BB%A3%E7%A0%81/">unity单例模式的样板代码</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/08/13/unity%E6%BB%9A%E8%BD%AE%E6%8E%A7%E5%88%B6%E6%91%84%E5%83%8F%E6%9C%BA%E8%B7%9D%E7%A6%BB/">unity滚轮控制摄像机距离</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/08/12/%E8%A7%A3%E5%86%B3%E7%BC%A9%E6%94%BE%E5%AE%8C%E7%BE%8E%E6%8F%92%E5%85%A5%E5%88%B0%E7%89%A9%E4%BD%93%E4%B8%8A%E6%96%B9%E7%9A%84%E6%96%B9%E6%B3%95%E6%8E%A2%E8%AE%A8/">解决缩放完美插入到物体上方的方法探讨</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/08/12/%E3%80%90unity%E5%8E%9F%E5%88%9B%E3%80%91%E7%82%B9%E5%87%BB%E5%9C%B0%E9%9D%A2%E4%BA%A7%E7%94%9F%E6%95%88%E6%9E%9C%E7%9A%84%E5%AE%9E%E7%8E%B0/">【unity原创】点击地面产生效果的实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/08/11/%5B%E5%8E%9F%E5%88%9B%5Dunity%E4%B8%80%E7%A7%8D%E5%9F%BA%E4%BA%8E%E6%96%87%E5%AD%97%E5%AE%BD%E5%BA%A6%E8%AE%A9%E8%83%8C%E6%99%AF%E8%B7%9F%E6%96%87%E5%AD%97%E8%87%AA%E9%80%82%E5%BA%94%E4%B8%8D%E7%94%A8shader%E5%AE%9E%E7%8E%B0%E6%8F%8F%E8%BE%B9/">原创unity一种基于文字宽度让背景跟文字自适应不用shader实现描边</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/08/11/%E5%85%B3%E4%BA%8E%E5%A4%9A%E4%B8%AA%E7%9B%B8%E6%9C%BA-depth%E5%BC%95%E5%8F%91%E7%9A%84%E8%A1%80%E6%A1%88/">关于多个相机depth引发的血案</a></li></ul></div></div><div class="widget"><div id="arAnchorBar"></div></div></div></section></div><div class="right-menu"></div><div class="modal search-modal"><div class="input-field"><input type="text" id="search_input"><label for="search-input">搜索</label></div><div id="search_result" class="search-result"></div></div><div class="blog-overlay"></div><footer class="row"><div class="footer-con"><div class="paginator"><a href="/2022/04/14/%E3%80%90%E5%8E%9F%E5%88%9B%E3%80%91%E5%9F%BA%E4%BA%8E%E9%BB%98%E8%AE%A4dialog-setSingleChoiceItems%E5%AF%B9%E8%AF%9D%E6%A1%86-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80%E5%A2%9E%E5%8A%A0%E9%A2%9C%E8%89%B2/" class="prev">PREV</a><a href="/2022/04/13/%E5%85%B3%E4%BA%8Eattr%E6%96%B9%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%B8%BB%E9%A2%98%E9%92%88%E5%AF%B9BottomNavigationView-%E6%B7%B1%E8%89%B2%E4%B8%BB%E9%A2%98%E9%80%89%E4%B8%AD%E4%BF%AE%E6%94%B9%E6%8C%87%E5%AE%9A%E7%89%B9%E5%AE%9A%E9%A2%9C%E8%89%B2%E3%80%82/" class="next">NEXT</a></div><!--PC和WAP自适应版--><div id="SOHUCS" sid="2022/04/13/【官方推荐方式】【原创】安卓换肤踩坑纯色模式app使用attr轻松实现定制颜色主题和深色主题/"> </div><script>(function() {
+    var appid = 'cytVgXm93'; 
+    var conf = 'e46b9c0a4ede5c70e062020c1d3651e1';
+    var width = window.innerWidth || document.documentElement.clientWidth; 
+    if (width < 960) { 
+    window.document.write('<script id="changyan_mobile_js" charset="utf-8" type="text/javascript" src="https://changyan.sohu.com/upload/mobile/wap-js/changyan_mobile.js?client_id=' + appid + '&conf=' + conf + '"><\/script>'); } else { var loadJs=function(d,a){var c=document.getElementsByTagName("head")[0]||document.head||document.documentElement;var b=document.createElement("script");b.setAttribute("type","text/javascript");b.setAttribute("charset","UTF-8");b.setAttribute("src",d);if(typeof a==="function"){if(window.attachEvent){b.onreadystatechange=function(){var e=b.readyState;if(e==="loaded"||e==="complete"){b.onreadystatechange=null;a()}}}else{b.onload=a}}c.appendChild(b)};loadJs("https://changyan.sohu.com/upload/changyan.js",function(){window.changyan.api.config({appid:appid,conf:conf})}); } })();</script><div class="copyright"><p>© 2015 - 2022 <a target="_blank">情随事迁</a>, 微博 <a href="https://weibo.com/qssq666" target="_blank">qssq666</a> <br>  <a href="https://space.bilibili.com/101043764?spm_id_from=333.1007.0.0" target="_blank">bilibli</a>  <a href="https://www.jianshu.com/u/9b0768e66d01" target="_blank">简书</a></p><p>总计访问量 <i data-hk-site="-"></i></p></div><div class="totop"><i></i></div></div></footer>
+<script async src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src="http://apps.bdimg.com/libs/jquery/1.8.2/jquery.min.js"></script><script src="/scripts/av-min-1.5.0.js"></script><script src="/scripts/hit-kounter-lc-0.3.0.js"></script><script src="/scripts/arAnchor.js"></script><script src="/scripts/main.js"></script></body></html>
